@@ -23,6 +23,6 @@ class AvanceFinanciero extends Model
     }
 
     public function avancefin(): HasMany {
-        return $this->hasMany(AvanceFinanciero::class, 'id');
+        return $this->hasMany(ProgramarFinanciero::class, 'id');
     }
 }

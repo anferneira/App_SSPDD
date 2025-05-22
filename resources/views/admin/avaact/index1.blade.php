@@ -93,6 +93,41 @@
                             </div>
                         </div>
                     </div>
+                    <div class="row">
+                        <div class="col-sm-4">
+                            <div class="form-group m-2">
+                                <label for="id_e" class="position-relative" style="top: -25px;">Estratégia de Desarrollo</label>
+                                <select name="id_e" id="id_e" class="form-control position-relative" style="top: -25px;" data-live-search="true">
+                                    <option value="0" selected>Todos</option>
+                                    @foreach ($estrategias as $e)
+                                        <option value="{{ $e->id }}">{{ $e->codigo_e.'. '.$e->nombre_e }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-sm-4">
+                            <div class="form-group m-2">
+                                <label for="id_dim" class="position-relative" style="top: -25px;">Dimensión de Desarrollo</label>
+                                <select name="id_dim" id="id_dim" class="form-control position-relative" style="top: -25px;" data-live-search="true">
+                                    <option value="0" selected>Todos</option>
+                                    @foreach ($dimensions as $dim)
+                                        <option value="{{ $dim->id }}">{{ $dim->codigo_d.'. '.$dim->nombre_d }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-sm-4">
+                            <div class="form-group m-2">
+                                <label for="id_a" class="position-relative" style="top: -25px;">Apuesta de Desarrollo</label>
+                                <select name="id_a" id="id_a" class="form-control position-relative" style="top: -25px;" data-live-search="true">
+                                    <option value="0" selected>Todos</option>
+                                    @foreach ($apuestas as $a)
+                                        <option value="{{ $a->id }}">{{ $a->codigo_a.'. '.$a->nombre_a }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                    </div>
                     <table class="display" id="avances" style="width: 100%;">
                         <thead class="text-center">
                             <tr class="text-center">
@@ -427,126 +462,124 @@
                     }
                 ]
             });
-            // Verificar si hay un mensaje almacenado en localStorage
-            /*let message = localStorage.getItem("toastr_message");
-            if (message) {
-                toastr.success(message);
-                // Eliminar el mensaje para que no se vuelva a mostrar
-                localStorage.removeItem("toastr_message");
-            }*/
         });
 
-        // Cuando se cambie el valor de la dependencia
-        /*$('#id_d').on('change', function () {
-            var id_d = $(this).val();
-            var rez = $('#rezago').prop('checked');
-            var urlDependencia = " route('dep_indi', ['id' => ':id']) ".replace(':id', id_d);
-            $.ajax({
-                url: urlDependencia,
-                type: 'get',
-                success: function(data) {
-                    var table = $('#avances').DataTable(); // Obtén la instancia actual de DataTable
-                    table.clear();
-
-                    data.forEach(function(item) {
-                        // Construcción del estado con la clase de color correcta
-                        var estado = "<td class='text-center'>";
-                        estado += item.estado_ip === 'Activo' 
-                            ? "<b class='badge bg-success estado'>" + item.estado_ip + "</b></td>"
-                            : "<b class='badge bg-danger'>" + item.estado_ip + "</b></td>";
-
-                        // Construcción de la acción con el botón de ver
-                        var AccionUrl = "{{ route('ver_ind1', ['id' => ':id']) }}".replace(':id', item.id);
-                        var accion = '<td class="text-center">';
-                        accion += '<a href="' + AccionUrl + '" class="ver btn btn-sm btn-info" title="ver actividades">';
-                        accion += '<i class="fas fa-eye"></i></a></td>';
-                        
-
-                        // Función para generar celdas con barras de progreso
-                        function generateProgressCellDesemp(percentage, desemp) {
-                            let des = '';                            
-                            if (percentage === "No programado") {
-                                return `<td class="text-center">${percentage}</td>`;
-                            }
-
-                            if (desemp === "Crítico") {
-                                des += `<b class="badge bg-danger"><span>${desemp}</span></b>`;
-                            }
-                            else {
-                                if (desemp === "Bajo") {
-                                    des += `<b class="badge bg-orange"><span>${desemp}</span></b>`;
-                                }
-                                else {
-                                    if (desemp === "Medio") {
-                                        des += `<b class="badge bg-warning"><span>${desemp}</span></b>`;
-                                    }
-                                    else {
-                                        if (desemp === "Satisfactorio") {
-                                            des += `<b class="badge bg-success"><span>${desemp}</span></b>`;
-                                        }
-                                        else {
-                                            if (desemp === "Sobresaliente") {
-                                                des += `<b class="badge bg-primary"><span>${desemp}</span></b>`;
-                                            }
-                                            else {
-                                                if (desemp === "Sobre Ejecutado") {
-                                                    des += `<b class="badge" style="background-color: #6f42c1; color: white;"><span>${desemp}</span></b>`;
-                                                }
-                                                else
-                                                    des += desemp;
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                            return `
-                                <td class="text-center">
-                                    ${percentage} %
-                                    <div class="progress" style="height: 10px;">
-                                        <div class="progress-bar bg-success" role="progressbar" 
-                                            style="width: ${percentage}%;" 
-                                            aria-valuenow="${percentage}" 
-                                            aria-valuemin="0" 
-                                            aria-valuemax="100">
-                                        </div>
-                                    </div>
-                                    ${des}
-                                </td>
-                            `;
-                        }
-
-                        // Agregar la fila a la tabla
-                        table.row.add([
-                            item.codigo_ip,   // Código del indicador
-                            item.nombre_ip,   // Nombre del indicador
-                            generateProgressCellDesemp(item.porcentaje2024, item.desemp2024), // % Avance 2024 con barra
-                            generateProgressCellDesemp(item.porcentaje2025, item.desemp2025), // % Avance 2025 con barra
-                            generateProgressCellDesemp(item.porcentaje2026, item.desemp2026), // % Avance 2026 con barra
-                            generateProgressCellDesemp(item.porcentaje2027, item.desemp2027), // % Avance 2027 con barra
-                            generateProgressCellDesemp(item.porcentajecuatrenio, item.desempcuatrenio),      // % Cuatrenio con barra
-                            estado,           // Estado con la clase adecuada
-                            accion,           // Botón de acción
-                        ]);
-                    });
-
-                    table.draw();
-                }
-            });
-        });*/
 
         // Mostrar indicadores en rezagos, ejecutado 100%, sin programar y por dependencia
-        function actualizarTablaRezago() {
+        function actualizarTablaRezago(sel) {
             const baseRutaRezago = "{{ route('rezago_ind_dep', ['id' => '__ID__']) }}";
             const baseRutaVer = "{{ route('ver_ind1', ['id' => '__ID__']) }}";
             var rez = document.getElementById('rezago').value;
             var id_dep = document.getElementById('id_d').value;
-            var id = rez + "-" + id_dep;
-            var urlRez = baseRutaRezago.replace('__ID__', id);
+            var id_est = $('#id_e').val();
+            var id_dim = $('#id_dim').val();
+            var id_apu = $('#id_a').val();
+            const ruta_eda = "{{ route('ind_est_dim_apu', ['id' => '__ID__']) }}";
+            var id_datos = id_dep + "-" + id_est + "-" + id_dim + "-" + id_apu + "-" + sel;
+            var urlRez = ruta_eda.replace('__ID__', id_datos);
+            $.ajax({
+                url: urlRez,
+                type: 'get',
+                success: function(data) {
+                    // Limpiar todos los selects primero
+                    const limpiarDimensiones = () => {
+                        $('#id_dim').empty().append('<option value="0">Todos</option>');
+                    };
+                    const limpiarApuestas = () => {
+                        $('#id_a').empty().append('<option value="0">Todos</option>');
+                    };
+
+                    // Helpers para cargar opciones
+                    const cargarDimensiones = (dimensiones) => {
+                        dimensiones.forEach(dim => {
+                            $('#id_dim').append('<option value="' + dim.dimension_id + '">' + dim.dimension_codigo + '. ' + dim.dimension_nombre + '</option>');
+                            if (id_dim == dim.dimension_id) {
+                                $('#id_dim').val(dim.dimension_id).trigger('change');
+                            }
+                        });
+                    };
+                    const cargarApuestas = (dimensiones) => {
+                        dimensiones.forEach(dim => {
+                            dim.apuestas.forEach(ap => {
+                                $('#id_a').append('<option value="' + ap.apuesta_id + '">' + ap.apuesta_codigo + '. ' + ap.apuesta_nombre + '</option>');
+                                if (id_apu == ap.apuesta_id) {
+                                    $('#id_a').val(ap.apuesta_id).trigger('change');
+                                }
+                            });
+                        });
+                    };
+                    // CASO 1: Estrategia seleccionada
+                    if (sel === 'id_e') {
+                        limpiarDimensiones();
+                        limpiarApuestas();
+                        cargarDimensiones(data.dimensiones);
+                        cargarApuestas(data.dimensiones);
+                    }
+                    else {
+                        // CASO 2: Dimensión seleccionada
+                        if (sel === 'id_dim') {
+                            evitarEventoEstrategia = true;
+                            $('#id_e').val(data.estrategia_id).trigger('change');
+                            limpiarApuestas();
+                            cargarApuestas(data.dimensiones);
+                        }
+                        else {
+                            // CASO 3: Apuesta seleccionada
+                            if (sel === 'id_a') {
+                                evitarEventoEstrategia = true;
+                                $('#id_e').val(data.estrategia_id).trigger('change');
+                                evitarEventoDimension = true;
+                                $('#id_dim').val(data.dimensiones[0].dimension_id).trigger('change');
+                            }
+                        }
+                    }
+                }
+            });
+            evitarEventoEstrategia = false;
+            evitarEventoDimension = false;
+            evitarEventoApuesta = false;
+            if (sel === 'id_e' && id_est != '0') {
+                id_dim = '0';
+                id_apu = '0';
+            }
+            else {
+                if (sel === 'id_dim' && id_dim != '0') {
+                    id_est = '0';
+                    id_apu = '0';
+                }
+                else {
+                    if (sel === 'id_a' && id_apu != '0') {
+                        id_est = '0';
+                        id_dim = '0';
+                    }
+                    else {
+                        if (sel === 'id_a' && id_apu === '0') {
+                            id_apu = '0';
+                        }
+                        else {
+                            if (sel === 'id_dim' && id_dim === '0') {
+                                id_dim = '0';
+                                id_apu = '0';
+                            }
+                            else {
+                                if (sel === 'id_e' && id_est === '0') {
+                                    id_est = '0';
+                                    id_dim = '0';
+                                    id_apu = '0';
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            id_datos = rez + "-" + id_dep + "-" + id_est + "-" + id_dim + "-" + id_apu + "-" + sel;
+            urlRez = baseRutaRezago.replace('__ID__', id_datos);
             $.ajax({
                 url: urlRez,
                 type: 'get',
                 success: function(data) {
                     let tabla = $('#avances').DataTable();
+                    let sel_est = $('#id_e')
                     tabla.clear();
                     data.forEach(ip => {
                         var AccionUrl = baseRutaVer.replace('__ID__', ip.id);
@@ -620,9 +653,86 @@
                 return `<b class="badge bg-danger">${estado}</b>`;
             }
         }
+        
+        let evitarEventoEstrategia = false;
+        let evitarEventoDimension = false;
+        let evitarEventoApuesta = false;
+        let sel_anterior = null;
+        let sel_actual = null;
 
-        // Escuchadores de cambio para ambos selects
-        $('#rezago').on('change', actualizarTablaRezago);
-        $('#id_d').on('change', actualizarTablaRezago);
+        $('#id_d').on('change', function () {
+            const baseRuta = "{{ route('cargar_select_e_d_a_d', ['id' => '__ID__']) }}";
+            var id_dep = document.getElementById('id_d').value;
+            var urlDep = baseRuta.replace('__ID__', id_dep);
+            $.ajax({
+                url: urlDep,
+                type: 'get',
+                success: function(data) {
+                    evitarEventoEstrategia = true;
+                    evitarEventoDimension = true;
+                    evitarEventoApuesta = true;
+                    $('#id_e').empty().append('<option value="0" selected>Todos</option>');
+                    $('#id_dim').empty().append('<option value="0" selected>Todos</option>');
+                    $('#id_a').empty().append('<option value="0" selected>Todos</option>');
+                    data[0].forEach(est => {
+                        $('#id_e').append(`<option value="${est.estrategias.id}">${est.estrategias.codigo_e}. ${est.estrategias.nombre_e}</option>`);
+                    });
+                    data[1].forEach(dim => {
+                        $('#id_dim').append(`<option value="${dim.dimensiones.id}">${dim.dimensiones.codigo_d}. ${dim.dimensiones.nombre_d}</option>`);
+                    });
+                    data[2].forEach(apu => {
+                        $('#id_a').append(`<option value="${apu.apuestas.id}">${apu.apuestas.codigo_a}. ${apu.apuestas.nombre_a}</option>`);
+                    });
+                    actualizarTablaRezago('id_e');
+                }
+            });
+            //actualizarTablaRezago('id_e');
+        });
+
+        $('#id_e, #id_dim, #id_a').on('mousedown', function() {
+            sel_anterior = document.activeElement; // El que tenía el foco antes del nuevo clic
+        });
+        
+        $('#id_e, #id_dim, #id_a').on('change', function() {
+            sel_actual = this.id;
+            let evitarEvento = false;
+
+            if (sel_actual === 'id_e') {
+                evitarEvento = evitarEventoEstrategia;
+            } else if (sel_actual === 'id_dim') {
+                evitarEvento = evitarEventoDimension;
+            } else if (sel_actual === 'id_a') {
+                evitarEvento = evitarEventoApuesta;
+            }
+
+            if (!evitarEvento) {
+                actualizarTablaRezago(sel_actual);
+            } 
+            else {
+                // Desactivar la bandera solo para este select
+                if (sel_actual === 'id_e') evitarEventoEstrategia = false;
+                if (sel_actual === 'id_dim') evitarEventoDimension = false;
+                if (sel_actual === 'id_a') evitarEventoApuesta = false;
+            }
+        });
+
+        $('#rezago').on('change', function() {
+            var id_e = document.getElementById('id_e').value;
+            var id_dim = document.getElementById('id_dim').value;
+            var id_a = document.getElementById('id_a').value;
+            if (sel_actual === null || sel_actual === 'id_e') {
+                actualizarTablaRezago('id_e');
+            }
+            else {
+                if (sel_actual === 'id_dim') {
+                    actualizarTablaRezago('id_dim');
+                }
+                else {
+                    if (sel_actual === 'id_a') {
+                        actualizarTablaRezago('id_a');
+                    }
+                }
+            }
+        });
     </script>    
 @endsection

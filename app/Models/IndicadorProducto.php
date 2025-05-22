@@ -88,7 +88,7 @@ class IndicadorProducto extends Model
     }
 
     public function indproducto(): HasMany {
-        return $this->HasMany(ProgramarFinanciero::class, 'id');
+        return $this->HasMany(ProgramarFinanciero::class, 'id_ip', 'id');
     }
 
     public function indproducto1(): HasMany {
@@ -105,5 +105,9 @@ class IndicadorProducto extends Model
 
     public function evidencias(): HasMany {
         return $this->hasMany(Evidencias::class, 'id');
+    }
+
+    public function logros(): HasMany {
+        return $this->hasMany(LogroIndicador::class, 'id');
     }
 }

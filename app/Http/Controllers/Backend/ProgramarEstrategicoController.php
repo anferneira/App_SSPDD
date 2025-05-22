@@ -26,6 +26,7 @@ class ProgramarEstrategicoController extends Controller
                                         ->get();
             $proests = ProgramarEstrategico::orderBy('id_ip')->get()
                                                 ->unique('id_ip');
+            //return response()->json($proests);
             return view('admin/proest.index', compact('usuario', 'nombre', 'rol', 'dependencia', 'ips', 'proests'));
         }
         return Redirect::route('login');

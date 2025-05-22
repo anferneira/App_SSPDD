@@ -31,7 +31,7 @@ return [
     |
     */
 
-    'lifetime' => 5, // Cambia a 5 minutos (Laravel puede cerrar sesión antes del tiempo definido en el middleware)
+    'lifetime' => 60, // Cambia a 60 minutos (Laravel puede cerrar sesión antes del tiempo definido en el middleware)
     'expire_on_close' => true, // Para que cierre sesión al cerrar el navegador
     'same_site' => 'lax', // Evita problemas de sesión con navegadores modernos
 

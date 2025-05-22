@@ -8,6 +8,9 @@
             <div class="row mb-2">
                 <div class="col-sm-6">
                     <h1>Usuarios
+                        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#importarusuariosmodal" title="cargar usuarios">
+                            <i class="fas fa-cloud-upload"></i>
+                        </button>
                         <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#agregarusuariomodal" title="nuevo usuario">
                             <i class="fas fa-plus"></i>
                         </button>
@@ -234,10 +237,57 @@
             </div>
         </div>
     </div>
+
+    <div class="modal fade" id="importarusuariosmodal">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-primary">
+                    <h5 class="modal-title" id="exampleModalLabel">Cargar Usuarios (Archivo CSV)</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="false">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form action="{{ route('csvusuarios') }}" method="POST" enctype="multipart/form-data">
+                        @csrf
+                        <div class="input-group">
+                            <!-- Botón personalizado -->
+                            <button class="btn btn-primary" id="customFileBtn" type="button">Seleccionar Archivo CSV</button>
+                            
+                            <!-- Muestra el nombre del archivo seleccionado -->
+                            <span id="fileName" class="ml-2">No se ha seleccionado ningún archivo</span>
+                    
+                            <!-- Input de archivo oculto -->
+                            <input 
+                                type="file"
+                                id="archivo_csv" 
+                                name="archivo" 
+                                accept=".csv" 
+                                style="display: none;" 
+                                required>
+                        </div>
+                        <div class="mt-3">
+                            <button class="btn btn-success" type="submit">Importar Datos</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @section('scripts')
     <script>
+        // Muestra el selector de archivos al hacer clic en el botón
+        document.getElementById('customFileBtn').addEventListener('click', function () {
+            document.getElementById('archivo_csv').click(); // Simula el clic en el input de archivo oculto
+        });
+
+        // Muestra el nombre del archivo seleccionado
+        document.getElementById('archivo_csv').addEventListener('change', function () {
+            const fileName = this.files[0] ? this.files[0].name : 'No se ha seleccionado ningún archivo';
+            document.getElementById('fileName').textContent = fileName;
+        });
         $(document).ready(function() {
             // Inicializar DataTable
             $('#usuarios').DataTable({

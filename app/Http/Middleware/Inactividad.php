@@ -14,7 +14,7 @@ class Inactividad
         if (Auth::check()) {
             $lastActivity = session('lastActivityTime');
 
-            if ($lastActivity && now()->diffInSeconds($lastActivity) > 300) { // 5 minutos
+            if ($lastActivity && now()->diffInSeconds($lastActivity) > 3600) { // 5 minutos
                 // Guardar la URL actual antes de cerrar sesión
                 Session::put('redirectAfterLogin', url()->current());
                 

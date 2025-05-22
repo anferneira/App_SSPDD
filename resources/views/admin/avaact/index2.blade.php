@@ -91,6 +91,9 @@
                                             <button type="button" class="btn btn-sm btn-success" data-toggle="modal" data-target="#verevidenciasipmodal" title="ver evidencias del indicador">
                                                 <i class="fas fa-solid fa-file"></i>
                                             </button>
+                                            <button type="button" class="btn btn-sm btn-primary" data-toggle="modal" data-target="#guardarlogrosipmodal" title="agregar logros del indicador">
+                                                <i class="fas fa-solid fa-trophy"></i>
+                                            </button>
                                         </td>
                                         <td id="dep" class="text-center">{{ $ip->dependencia->nombre_d }}</th>
                                     </tr>
@@ -343,10 +346,21 @@
                                     <b class="badge"></b>
                                 </span>
                             </div>
+                            <div class="row">
+                                <div class="col-sm-12">
+                                    <div class="form-group m-2">
+                                        <label for="desc_act" class="position-relative">Descripción del Periodo</label>
+                                        <textarea name="desc_act" id="desc_act" class="form-control" placeholder="Justificación del logro" required></textarea>
+                                        <div class="d-flex justify-content-end mt-1">
+                                            <span class="badge btn-danger" id="max_logro_act">0</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
-                        <button type="submit" class="btn btn-primary">Guardar</button>
+                        <button type="submit" class="btn btn-primary" id="envia_act" disabled>Guardar</button>
                     </div>
                     </form>
                 </div>
@@ -466,6 +480,7 @@
                         <p><strong>Rezago: </strong><span id="verrezago" class="badge"></span></p>
                         <p><strong>% Periodo <span id="verperiodo1"></span>: </strong><span id="verporcperiodo"></span></p>
                         <p><strong>% Año <span id="veranio"></span>: </strong><span id="verporcanio"></span></p>
+                        <p><strong>Justificación: </strong><span id="verjust_act"></span></p>
                         <p><strong>Estado: </strong><span id="verestado" class="badge bg-danger"></span></p>
                         <p><strong>Registro: </strong><span id="vercreado"></span></p>
                         <p><strong>Última Actualización: </strong><span id="veractualizado"></span></p>
@@ -999,6 +1014,68 @@
                 </div>
             </div>
         </div>
+
+        <div class="modal fade" id="guardarlogrosipmodal">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary">
+                        <h5 class="modal-title" id="exampleModalLabel">Agregar Logro del Indicador - {{ $ip->codigo_ip }}</h5>
+                        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="false">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="formularioLogros" action="{{ route('guardarlogroip') }}" method="POST" enctype="multipart/form-data">
+                            @csrf
+                            <input type="hidden" name="id_ip" id="id_ip_e" value="{{ $ip->id }}">
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <div class="form-group m-2">
+                                        <label for="id_anio" class="position-relative" style="top: -25px;">Año</label>
+                                        <select name="id_anio" id="id_anio_lip" class="form-control position-relative" style="top: -25px;" data-live-search="true">
+                                            <option value="0" selected>Todos</option>
+                                            <option value="2024">2024</option>
+                                            <option value="2025">2025</option>
+                                            <option value="2026">2026</option>
+                                            <option value="2027">2027</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="form-group m-2">
+                                        <label for="id_trimestre" class="position-relative" style="top: -25px;">Trimestre</label>
+                                        <select name="id_trimestre" id="id_trimestre_lip" class="form-control position-relative" style="top: -25px;" data-live-search="true">
+                                            <option value="0" selected>Todos</option>
+                                            <option value="1">1</option>
+                                            <option value="2">2</option>
+                                            <option value="3">3</option>
+                                            <option value="4">4</option>      
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row mb-0">
+                                <span class="badge">Nota: Ingrese mínimo 500 caracteres para la justificación</span>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-12">
+                                    <div class="form-group m-2">
+                                        <label for="logro_ip" class="position-relative">Logro del Periodo</label>
+                                        <textarea name="logro_ip" id="logro_ip" class="form-control" placeholder="Justificación del logro" required></textarea>
+                                        <div class="d-flex justify-content-end mt-1">
+                                            <span class="badge btn-danger" id="max_logro_ip">0</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <button class="btn btn-success" id="envia_logro" type="submit" disabled>Guardar Logro</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
     </section>
 @endsection
 
@@ -1511,12 +1588,6 @@
 
             // Generar la URL correctamente
             const url = `{{ route('rezago1', ['id' => '__ID__']) }}`.replace('__ID__', datos);
-
-            /*if (avance === '' || parseFloat(avance) === 0) {  
-                badgeRezago.text('').removeClass().addClass('badge');
-                badgeDesempeno.text('').removeClass().addClass('badge');
-                return;
-            }*/
 
             $.ajax({
                 url: url,
@@ -2528,7 +2599,7 @@
             $('#verporcanio').text('');
             $('#verporcavance').text('');
             $('#verdesempenio').text('').removeClass();
-            //verlistaevidencias.innerHTML = '';
+            $('#verjust_act').text('');
             $('#verestado').text('').removeClass();
             $('#vercreado').text('');
             $('#veractualizado').text('');
@@ -2603,6 +2674,7 @@
                     $('#verporcavance').text(data[0].porcentaje_avance + '%');
                     $('#verporcperiodo').text(data[0].porcentaje_periodo + '%');
                     $('#verporcanio').text(data[0].porcentaje_anio + '%');
+                    $('#verjust_act').text(data[0].descripcion);
                     if (data.length > 0) {
                         $('#verestado').text(data[0].estado).removeClass().addClass('badge').addClass(data[0].estado === 'Activo' ? 'bg-success' : 'bg-danger');
                         var fechacreado = new Date(data[0].created_at);
@@ -2674,6 +2746,76 @@
                 }
             }
         }
+
+        $('#logro_ip').on('input', function () {
+            var el = this;
+            var val = el.value;
+
+            // Guarda posición del cursor
+            var start = el.selectionStart;
+            var end = el.selectionEnd;
+
+            // Reemplaza múltiples espacios por uno solo
+            var newVal = val.replace(/\s+/g, ' ');
+
+            if (newVal !== val) {
+                // Si cambió, actualiza el valor
+                el.value = newVal;
+
+                // Ajusta la posición del cursor para que no se mueva hacia atrás al eliminar espacios extra
+                var diff = val.length - newVal.length;
+                var newPos = start - diff;
+                if (newPos < 0) newPos = 0;
+
+                el.setSelectionRange(newPos, newPos);
+            }
+
+            // Actualiza contador
+            $('#max_logro_ip').text(el.value.length).removeClass('badge bg-success bg-danger');
+
+            if (el.value.length >= 500) {
+                $('#envia_logro').prop('disabled', false);
+                $('#max_logro_ip').addClass('badge bg-success');
+            } else {
+                $('#envia_logro').prop('disabled', true);
+                $('#max_logro_ip').addClass('badge bg-danger');
+            }
+        });
+
+        $('#desc_act').on('input', function () {
+            var el = this;
+            var val = el.value;
+
+            // Guarda posición del cursor
+            var start = el.selectionStart;
+            var end = el.selectionEnd;
+
+            // Reemplaza múltiples espacios por uno solo
+            var newVal = val.replace(/\s+/g, ' ');
+
+            if (newVal !== val) {
+                // Si cambió, actualiza el valor
+                el.value = newVal;
+
+                // Ajusta la posición del cursor para que no se mueva hacia atrás al eliminar espacios extra
+                var diff = val.length - newVal.length;
+                var newPos = start - diff;
+                if (newPos < 0) newPos = 0;
+
+                el.setSelectionRange(newPos, newPos);
+            }
+
+            // Actualiza contador
+            $('#max_logro_act').text(el.value.length).removeClass('badge bg-success bg-danger');
+
+            if (el.value.length >= 500) {
+                $('#envia_act').prop('disabled', false);
+                $('#max_logro_act').addClass('badge bg-success');
+            } else {
+                $('#envia_act').prop('disabled', true);
+                $('#max_logro_act').addClass('badge bg-danger');
+            }
+        });
 
         $('#agregaravancemodal').on('hidden.bs.modal', function () {
             $(this).find('input[type="text"], input[type="number"]').val('0'); // Limpiar textos y números

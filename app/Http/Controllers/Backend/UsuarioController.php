@@ -115,7 +115,7 @@ class UsuarioController extends Controller
         sort($encabezadosLeidos);
         sort($encabezadosEsperados);
 
-        dd($encabezadosLeidos, $encabezadosEsperados);
+        //dd($encabezadosLeidos, $encabezadosEsperados);
 
         // Verificar si los encabezados coinciden
         // Comparamos si los encabezados obtenidos coinciden con los esperados

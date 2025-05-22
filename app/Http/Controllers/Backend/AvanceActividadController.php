@@ -3,6 +3,9 @@
 namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
+use App\Models\Estrategia;
+use App\Models\Dimension;
+use App\Models\Apuesta;
 use App\Models\Actividad;
 use App\Models\AvanceActividad;
 use  App\Models\AvanceEstrategico;
@@ -11,6 +14,11 @@ use App\Models\ProgramarEstrategico;
 use App\Models\Dependencia;
 use App\Models\Evidencias;
 use App\Imports\csvImportAvaAct;
+use App\Models\DependenciaApuesta;
+use App\Models\DependenciaDimension;
+use App\Models\DependenciaEstrategia;
+use App\Models\Logro;
+use App\Models\LogroIndicador;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
@@ -40,6 +48,9 @@ class AvanceActividadController extends Controller
                                 ->where('id', '!=', 1)
                                 ->where('id', '!=', 31)
                                 ->where('id', '!=', 32)->get();
+            $estrategias = Estrategia::orderBy('codigo_e')->get();
+            $dimensions = Dimension::orderBy('codigo_d')->get();
+            $apuestas = Apuesta::orderBy('codigo_a')->get();
             $ips = Actividad::selectRaw('
                 indicador_productos.id as id,
                 REPLACE(indicador_productos.codigo_ip, ",", ".") as codigo_ip,
@@ -258,9 +269,16 @@ class AvanceActividadController extends Controller
                     'desempcuatrenio' => $desempcuatrenio,
                 ];
             });
-            return view('admin/avaact.index1', compact('usuario', 'nombre', 'rol', 'dependencia', 'ips', 'dependencias'));
+            return view('admin/avaact.index1', compact('usuario', 'nombre', 'rol', 'dependencia', 'ips', 'dependencias', 'estrategias', 'dimensions', 'apuestas'));
         }
         return Redirect::route('login');
+    }
+
+    public function cargar_select_e_d_a_d($id) {
+        $datosE = DependenciaEstrategia::with('estrategias')->where('id_d', $id)->get();
+        $datosD = DependenciaDimension::with('dimensiones')->where('id_dep', $id)->get();
+        $datosA = DependenciaApuesta::with('apuestas')->where('id_dep', $id)->get();
+        return response()->json([$datosE, $datosD, $datosA]);
     }
 
     public function dep_indi($id) {
@@ -288,6 +306,7 @@ class AvanceActividadController extends Controller
                                     ->where('trimestre_aa', $request->trimestre)->get();
         if ($avaact->count() > 0)
             return redirect()->route('listaravaacts')->with('error', 'El Avance de la Actividad ya existe en el sistema.');
+        
         $request->validate([
             'avance' => 'required',
             'anio' => 'required',
@@ -309,43 +328,6 @@ class AvanceActividadController extends Controller
             $id = $ava->id;
         }
         $ip = str_replace([',', '.'], '_', $ip);
-        $tot = 0;
-        // Guarda las evidencias en el disco
-        if ($request->hasFile('evidencias')) {
-            /*return response()->json([
-                'success' => true,
-                'message' => 'Archivos recibidos correctamente',
-                'files' => $request->file('evidencias')
-            ]);*/
-            //dd($request->file('evidencias')); // 👈 Verifica qué está recibiendo
-            foreach ($request->file('evidencias') as $archivo) {
-            //$archivos = $request->file('evidencias');
-            //$tot = is_array($archivos) ? count($archivos) : 1;
-            
-            // Asegurarse de que $archivos sea siempre un array
-            //foreach ((is_array($archivos) ? $archivos : [$archivos]) as $archivo) {
-                $tot = $tot + 1;
-                $nombreArchivo = 'Ind_'.$ip.'_Act_'.$a.'_'.$archivo->getClientOriginalName();
-                $ruta = $archivo->storeAs('evidencias', $nombreArchivo, 'public');
-
-                /*if (!$ruta) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Hubo un error al guardar la evidencia'
-                    ]);
-                }*/
-    
-                // Guardar las evidencias en la tabla
-                
-                $evid = new Evidencias();
-                $evid->evidencia = $ruta;
-                $evid->anio_a = $request->input('anio');
-                $evid->trimestre_a = $request->input('trimestre');
-                $evid->id_aa = $id;
-                $evid->estado_e = "Activo";
-                $evid->save();
-            }
-        }
         $avaest = AvanceEstrategico::where('id_ip', $request->id_ip)
                                     ->where('anio_ae', $request->anio)
                                     ->where('trimestre_ae', $request->trimestre)->get();
@@ -374,20 +356,162 @@ class AvanceActividadController extends Controller
             $actavaest->estado_ae = 'Activo';
             $actavaest->save();
         }
-
+        $avaact = AvanceActividad::where('id_a', $request->id_a)
+                                    ->where('anio_aa', $request->anio)
+                                    ->where('trimestre_aa', $request->trimestre)->get();
+        foreach ($avaact as $ava) {
+            $a = $ava->actividad->codigo_a;
+        }
         $id = $request->id_ip;
-        //return redirect()->route('listaravaacts')->with('success', 'Avance de la Actividad creado correctamente, con '.$tot.' evidencias');
-        /*return request()->ajax()
-                ? response()->json(['success' => true, 'message' => 'Avance de la Actividad creado correctamente, con '.$tot.' evidencias'])
-                : redirect()->route('listaravaacts')->with('success', 'Avance de la Actividad creado correctamente, con '.$tot.' evidencias');*/
-        if ($request->ajax()) {
+        return redirect()->route('ver_ind1', ['id' => $id])->with('success', 'Avance de la Actividad creado correctamente para la actividad '.$a.' en el periodo '.$request->anio.'_'.$request->trimestre);
+        //return redirect()->route('listaravaacts')->with('success', 'Avance de la Actividad creado correctamente para la actividad '.$a.' en el periodo '.$request->anio.'_'.$request->trimestre);
+    }
+
+    public function ind_est_dim_apu($id)
+    {
+        try {
+            $partes = explode('-', $id);
+            if (count($partes) < 5) {
+                return response()->json(['error' => 'Parámetros incompletos'], 400);
+            }
+
+            // Asignación segura
+            list($id_dep, $id_est, $id_dim, $id_apu, $sel) = $partes;
+
+            // Valida que sean números si lo necesitas
+            // Luego tu lógica...
+
+        } catch (\Exception $e) {
+            Log::error('Error en ind_est_dim_apu: ' . $e->getMessage());
+            return response()->json(['error' => 'Error interno del servidor'], 500);
+        }
+        
+        Log::info("mensaje: ".$id);
+        $valor = array_map('trim', explode('-', $id));
+        Log::info("datos: ".count($valor));
+        $id_dep = $valor[0];
+        $id_est = $valor[1];
+        $id_dim = $valor[2];
+        $id_apu = $valor[3];
+        $id_sel = $valor[4];
+        if ($id_sel === 'id_e' && $id_est != '0') {
+            $id_dim = '0';
+            $id_apu = '0';
+        }
+        else {
+            if ($id_sel === 'id_dim' && $id_dim != '0') {
+                $id_est = '0';
+                $id_apu = '0';
+            }
+            else {
+                if ($id_sel === 'id_a' && $id_apu != '0') {
+                    $id_est = '0';
+                    $id_dim = '0';
+                }
+                else {
+                    if ($id_sel === 'id_a' && $id_apu === '0') {
+                        $id_apu = '0';
+                    }
+                    else {
+                        if ($id_sel === 'id_dim' && $id_dim === '0') {
+                            $id_dim = '0';
+                            $id_apu = '0';
+                        }
+                        else {
+                            if ($id_sel === 'id_e' && $id_dim === '0') {
+                                $id_est = '0';
+                                $id_dim = '0';
+                                $id_apu = '0';
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        $datos = DB::table('estrategias')
+            ->leftJoin('dimensions', 'estrategias.id', '=', 'dimensions.id_e')
+            ->leftJoin('apuestas', 'dimensions.id', '=', 'apuestas.id_d')
+            ->leftJoin('dependencia_estrategias', 'dependencia_estrategias.id_e', '=', 'estrategias.id')
+            ->leftJoin('dependencia_dimensions', 'dependencia_dimensions.id_dim', '=', 'dimensions.id')
+            ->leftJoin('dependencia_apuestas', 'dependencia_apuestas.id_apu', '=', 'apuestas.id')
+            ->select(
+                'estrategias.id as estrategia_id',
+                'estrategias.codigo_e as estrategia_codigo',
+                'estrategias.nombre_e as estrategia_nombre',
+                'dimensions.id as dimension_id',
+                'dimensions.codigo_d as dimension_codigo',
+                'dimensions.nombre_d as dimension_nombre',
+                'dimensions.id_e as dimension_id_e',
+                'apuestas.id as apuesta_id',
+                'apuestas.codigo_a as apuesta_codigo',
+                'apuestas.nombre_a as apuesta_nombre'
+            )
+            ->when($id_est != '0', fn($q) => $q->where('estrategias.id', $id_est))
+            ->when($id_dim != '0', fn($q) => $q->where('dimensions.id', $id_dim))
+            ->when($id_apu != '0', fn($q) => $q->where('apuestas.id', $id_apu))
+            ->when($id_dep != '0' && !in_array($id_dep, ['1', '31', '32']), function ($query) use ($id_dep) {
+                $query->where(function ($q) use ($id_dep) {
+                    $q->where('dependencia_estrategias.id_d', $id_dep)
+                    ->orWhere('dependencia_dimensions.id_dep', $id_dep)
+                    ->orWhere('dependencia_apuestas.id_dep', $id_dep);
+                });
+            })
+            ->groupBy(
+                'estrategias.id',
+                'estrategias.codigo_e',
+                'estrategias.nombre_e',
+                'dimensions.id',
+                'dimensions.codigo_d',
+                'dimensions.nombre_d',
+                'dimensions.id_e',
+                'apuestas.id',
+                'apuestas.codigo_a',
+                'apuestas.nombre_a'
+            )
+            ->get();
+
+        // Si no hay datos, responder vacío
+        if ($datos->isEmpty()) {
             return response()->json([
-                'success' => true,
-                'message' => 'Avance de la Actividad creado correctamente',
-                'redirect' => route('ver_ind1', ['id' => $id])
+                'estrategia_id' => null,
+                'estrategia_codigo' => null,
+                'estrategia_nombre' => null,
+                'dimensiones' => []
             ]);
         }
-        return redirect()->route('listaravaacts')->with('success', 'Avance de la Actividad creado correctamente, con '.$tot.' evidencias');
+
+        // Siempre devolvemos la estrategia relacionada (de la primera fila)
+        $resultado = [
+            'estrategia_id' => $datos[0]->estrategia_id,
+            'estrategia_codigo' => $datos[0]->estrategia_codigo,
+            'estrategia_nombre' => $datos[0]->estrategia_nombre,
+            'dimensiones' => []
+        ];
+
+        $dimensiones = [];
+        foreach ($datos as $row) {
+            if ($row->dimension_id !== null && !isset($dimensiones[$row->dimension_id])) {
+                $dimensiones[$row->dimension_id] = [
+                    'dimension_id' => $row->dimension_id,
+                    'dimension_codigo' => $row->dimension_codigo,
+                    'dimension_nombre' => $row->dimension_nombre,
+                    'dimension_id_e' => $row->dimension_id_e,
+                    'apuestas' => []
+                ];
+            }
+
+            if ($row->apuesta_id !== null && isset($dimensiones[$row->dimension_id])) {
+                $dimensiones[$row->dimension_id]['apuestas'][] = [
+                    'apuesta_id' => $row->apuesta_id,
+                    'apuesta_codigo' => $row->apuesta_codigo,
+                    'apuesta_nombre' => $row->apuesta_nombre
+                ];
+            }
+        }
+
+        $resultado['dimensiones'] = array_values($dimensiones);
+
+        return response()->json($resultado);
     }
 
     public function guardarevidenciasip(Request $request) {
@@ -432,6 +556,40 @@ class AvanceActividadController extends Controller
             ]);
         }
         return redirect()->route('ver_ind1', ['id' => $id])->with('error', 'No se guardaron las evidencias para el indicador '.$ip->codigo_ip.' en el periodo '.$request->id_anio_eip.'_'.$request->id_trimestre_eip);                
+    }
+
+    public function guardarlogroip(Request $request) {
+        //return response()->json($request);
+        $request->validate([
+            'id_anio' => 'required',
+            'id_trimestre' => 'required',
+            'id_ip' => 'required|exists:actividads,id',
+            'logro_ip' => 'required',
+        ]);
+        $ip = IndicadorProducto::where('codigo_ip', $request->id_ip)->get();
+        foreach ($ip as $i) {
+            $id = $i->id;
+            $codigo_ip = str_replace([',', '.'], '_', $i->codigo_ip);
+        }
+        $logro_ip = LogroIndicador::where('id_ip', $id)
+                                    ->where('anio_lip', $request->id_anio)
+                                    ->where('trimestre_lip', $request->id_trimestre)->get();
+        
+        foreach ($logro_ip as $lip) {
+            $id_l = $lip->id;
+        }
+        if ($logro_ip->count() == 1)
+            $logro_ip = LogroIndicador::find($id_l);
+        else {
+            $logro_ip = new LogroIndicador();
+        }
+        $logro_ip->logro = $request->input('logro_ip');
+        $logro_ip->anio_lip = $request->input('id_anio');
+        $logro_ip->trimestre_lip = $request->input('id_trimestre');
+        $logro_ip->id_ip = $request->input('id_ip');
+        $logro_ip->estado_lip = 'Activo';
+        $logro_ip->save();
+        return redirect()->route('ver_ind1', ['id' => $id])->with('success', 'Se guardó el logro para el indicador '.$codigo_ip.' en el periodo '.$request->id_anio.'_'.$request->id_trimestre);
     }
 
     public function ver_ind1($id) {
@@ -562,7 +720,6 @@ class AvanceActividadController extends Controller
         $trim = $valor[1];
         $ind = $valor[2];
         $rez = $valor[3];
-
         $datos = DB::table('actividads')
                 ->leftJoin('avance_actividads', 'actividads.id', '=', 'avance_actividads.id_a')
                 ->leftJoin('indicador_productos', 'actividads.id_ip', '=', 'indicador_productos.id')
@@ -681,51 +838,6 @@ class AvanceActividadController extends Controller
         $total = $datos->count();
         return response()->json([$datos,$faltan,$total]);
     }
-    
-    /*public function veravaact($id) {
-        $avaact = Actividad::join('avance_actividads', 'actividads.id', '=', 'avance_actividads.id_a')
-                            ->join('indicador_productos', 'indicador_productos.id', '=', 'actividads.id_ip')
-                            ->join('dependencias', 'dependencias.id', '=', 'indicador_productos.id_d')
-                            ->select('actividads.codigo_a as codigo_a', 'actividads.nombre_a as nombre_a', 'indicador_productos.codigo_ip as codigo_ip', 'indicador_productos.nombre_ip as nombre_ip', 'dependencias.nombre_d as nombre_d', 'avance_actividads.anio_aa as anio', 'avance_actividads.trimestre_aa as trimestre', 'actividads.aporte_a as aporte', 'avance_actividads.avance_aa as avance', 'avance_actividads.estado_aa as estado', 'avance_actividads.created_at as created_at', 'avance_actividads.updated_at as updated_at', DB::raw('(SELECT SUM(CAST(REPLACE(aporte_a, ",", ".") AS DECIMAL(10,2))) FROM actividads) AS total_aporte_cuatrenio'), DB::raw('(SELECT COUNT(*) FROM actividads) AS total_registros_cuatrenio'),
-                            // 🔹 Reemplaza "," por "." en el campo `aporte_a`
-                            DB::raw('REPLACE(actividads.aporte_a, ",", ".") as aporte'),
-                            'avance_actividads.avance_aa as avance',
-                            // 🔹 Suma del aporte para el mismo año del avance (`anio_aa`)
-                            DB::raw('(SELECT SUM(CAST(REPLACE(a2.aporte_a, ",", ".") AS DECIMAL(10,2)))
-                                    FROM actividads AS a2
-                                    JOIN avance_actividads AS aa2 ON a2.id = aa2.id_a
-                                    WHERE aa2.anio_aa = aa2.anio_aa
-                                    AND a2.id_ip = indicador_productos.id) AS total_aporte_anio'),
-                            // 🔹 Suma del aporte para el mismo periodo del avance (`trimestre_aa`)
-                            DB::raw('(SELECT SUM(CAST(REPLACE(a3.aporte_a, ",", ".") AS DECIMAL(10,2)))
-                                    FROM actividads AS a3
-                                    JOIN avance_actividads AS aa3 ON a3.id = aa3.id_a
-                                    WHERE aa3.anio_aa = avance_actividads.anio_aa
-                                    AND aa3.trimestre_aa = avance_actividads.trimestre_aa
-                                    AND a3.id_ip = indicador_productos.id) AS total_aporte_periodo'),
-                            // 🔹 Contar el total de registros para el mismo año del avance (`anio_aa`)
-                            DB::raw('(SELECT COUNT(*) FROM actividads 
-                                    INNER JOIN avance_actividads AS aa ON actividads.id = aa.id_a
-                                    WHERE aa.anio_aa = avance_actividads.anio_aa) AS total_registros_anio'))
-                            ->where('actividads.id', $id)
-                            ->groupBy(
-                                'indicador_productos.id',
-                                'actividads.codigo_a',
-                                'actividads.nombre_a',
-                                'indicador_productos.codigo_ip',
-                                'indicador_productos.nombre_ip',
-                                'dependencias.nombre_d',
-                                'avance_actividads.anio_aa',
-                                'avance_actividads.trimestre_aa',
-                                'actividads.aporte_a',
-                                'avance_actividads.avance_aa',
-                                'avance_actividads.estado_aa',
-                                'avance_actividads.created_at',
-                                'avance_actividads.updated_at'
-                            )
-                            ->get();
-        return response()->json($avaact);
-    }*/
 
     public function veravaact($id) {
         $avaact = Actividad::join('avance_actividads', 'actividads.id', '=', 'avance_actividads.id_a')
@@ -759,7 +871,7 @@ class AvanceActividadController extends Controller
                                 $join->on('actividads.id_ip', '=', 'sumas_anio.id_ip')
                                     ->on('actividads.anio_a', '=', 'sumas_anio.anio_a');
                             })
-                            ->select('actividads.codigo_a as codigo_a', 'actividads.nombre_a as nombre_a', 'indicador_productos.codigo_ip as codigo_ip', 'indicador_productos.nombre_ip as nombre_ip', 'dependencias.nombre_d as nombre_d', 'avance_actividads.anio_aa as anio', 'avance_actividads.trimestre_aa as trimestre', 'actividads.aporte_a as aporte', 'avance_actividads.avance_aa as avance', 'avance_actividads.estado_aa as estado', 'avance_actividads.created_at as created_at', 'avance_actividads.updated_at as updated_at',
+                            ->select('actividads.codigo_a as codigo_a', 'actividads.nombre_a as nombre_a', 'indicador_productos.codigo_ip as codigo_ip', 'indicador_productos.nombre_ip as nombre_ip', 'dependencias.nombre_d as nombre_d', 'avance_actividads.anio_aa as anio', 'avance_actividads.trimestre_aa as trimestre', 'actividads.aporte_a as aporte', 'avance_actividads.avance_aa as avance', 'avance_actividads.estado_aa as estado', 'avance_actividads.created_at as created_at', 'avance_actividads.updated_at as updated_at', 'avance_actividads.descripcion_aa as descripcion',
                                 DB::raw('COALESCE(SUM(CAST(REPLACE(avance_actividads.avance_aa, ",", ".") AS DECIMAL(10,2))), 0) as avance_total'),
                                 DB::raw('
                                     COALESCE(
@@ -806,6 +918,7 @@ class AvanceActividadController extends Controller
                                 'avance_actividads.trimestre_aa',
                                 'actividads.aporte_a',
                                 'avance_actividads.avance_aa',
+                                'avance_actividads.descripcion_aa',
                                 'sumas_periodo.total_aporte_periodo',
                                 'sumas_anio.total_aporte_anio',
                                 'avance_actividads.estado_aa',
@@ -992,74 +1105,6 @@ class AvanceActividadController extends Controller
                 $item->total_2027 = 'No programado';
             }
         }
-        
-        /*$avaest = AvanceEstrategico::with('indproducto')->find($id);
-        $programado = ProgramarEstrategico::selectRaw('p'.$avaest->anio_ae.'_'.$avaest->trimestre_ae.' as programado')
-                                                    ->where('id_ip', $avaest->id_ip)
-                                                    ->get();
-        foreach ($programado as $p)
-            $avaest->programado = $p->programado;
-        $pe = ProgramarEstrategico::where('id_ip', $avaest->id_ip)->get();
-        $sum = 0;
-        $cont = 0;
-        foreach ($pe as $p) {
-            if ($avaest->anio_ae == 2024) {
-                $sum = $sum + floatval(str_replace(',', '.', $p->p2024_3));
-                $sum = $sum + floatval(str_replace(',', '.', $p->p2024_4));
-            }
-            else {
-                if ($avaest->anio_ae == 2025) {
-                    $sum = $sum + floatval(str_replace(',', '.', $p->p2025_1));
-                    $sum = $sum + floatval(str_replace(',', '.', $p->p2025_2));
-                    $sum = $sum + floatval(str_replace(',', '.', $p->p2025_3));
-                    $sum = $sum + floatval(str_replace(',', '.', $p->p2025_4));
-                }
-                else {
-                    if ($avaest->anio_ae == 2026) {
-                        $sum = $sum + floatval(str_replace(',', '.', $p->p2026_1));
-                        $sum = $sum + floatval(str_replace(',', '.', $p->p2026_2));
-                        $sum = $sum + floatval(str_replace(',', '.', $p->p2026_3));
-                        $sum = $sum + floatval(str_replace(',', '.', $p->p2026_4));
-                    }
-                    else {
-                        $sum = $sum + floatval(str_replace(',', '.', $p->p2027_1));
-                        $sum = $sum + floatval(str_replace(',', '.', $p->p2027_2));
-                        $sum = $sum + floatval(str_replace(',', '.', $p->p2027_3));
-                        $sum = $sum + floatval(str_replace(',', '.', $p->p2027_4));
-                    }
-                }
-            }
-            $cont++;
-        }
-        $avaest->programado_anio = $sum;
-        $avaest->cantidad_anio = $cont;
-        $pe = ProgramarEstrategico::all();
-        $sum = 0;
-        $cont = 0;
-        foreach ($pe as $p) {
-            $sum = $sum + floatval(str_replace(',', '.', $p->p2024_3));
-            $sum = $sum + floatval(str_replace(',', '.', $p->p2024_4));
-            $sum = $sum + floatval(str_replace(',', '.', $p->p2025_1));
-            $sum = $sum + floatval(str_replace(',', '.', $p->p2025_2));
-            $sum = $sum + floatval(str_replace(',', '.', $p->p2025_3));
-            $sum = $sum + floatval(str_replace(',', '.', $p->p2025_4));
-            $sum = $sum + floatval(str_replace(',', '.', $p->p2026_1));
-            $sum = $sum + floatval(str_replace(',', '.', $p->p2026_2));
-            $sum = $sum + floatval(str_replace(',', '.', $p->p2026_3));
-            $sum = $sum + floatval(str_replace(',', '.', $p->p2026_4));
-            $sum = $sum + floatval(str_replace(',', '.', $p->p2027_1));
-            $sum = $sum + floatval(str_replace(',', '.', $p->p2027_2));
-            $sum = $sum + floatval(str_replace(',', '.', $p->p2027_3));
-            $sum = $sum + floatval(str_replace(',', '.', $p->p2027_4));
-            $cont++;
-        }
-        $avaest->programado_cuatrenio = $sum;
-        $avaest->cantidad_cuatrenio = $cont;
-        
-        Log::info('Consulta de avance estratégico', [
-            'avance_estrategico_id' => $id,
-            'resultado' => $avaest
-        ]);*/
         return response()->json($datos);
     }
 
@@ -1174,7 +1219,7 @@ class AvanceActividadController extends Controller
         // Los encabezados leídos están en $headings[0][0]
         $encabezadosLeidos = $headings[0][0];
         // Encabezados esperados
-        $encabezadosEsperados = ['id_a', 'avance_aa', 'anio_aa', 'trimestre_aa', 'estado_aa'];
+        $encabezadosEsperados = ['id_a', 'avance_aa', 'anio_aa', 'trimestre_aa', 'descripcion_aa', 'estado_aa'];
 
         $encabezadosLeidos = array_map('trim', $headings[0][0]);
         sort($encabezadosLeidos);
@@ -1227,6 +1272,9 @@ class AvanceActividadController extends Controller
         $valor = array_map('trim', explode('-', $id));
         $rez = $valor[0];
         $id_d = $valor[1];
+        $id_est = $valor[2];
+        $id_dim = $valor[3];
+        $id_apu = $valor[4];
         $query = Actividad::selectRaw('
                 indicador_productos.id as id,
                 REPLACE(indicador_productos.codigo_ip, ",", ".") as codigo_ip,
@@ -1245,10 +1293,27 @@ class AvanceActividadController extends Controller
             ')
             ->leftJoin('indicador_productos', 'indicador_productos.id', '=', 'actividads.id_ip')
             ->leftJoin('avance_actividads', 'avance_actividads.id_a', '=', 'actividads.id')
-            ->leftJoin('programar_estrategicos', 'programar_estrategicos.id_ip', '=', 'indicador_productos.id');
+            ->leftJoin('programar_estrategicos', 'programar_estrategicos.id_ip', '=', 'indicador_productos.id')
+            ->leftJoin('apuestas', 'apuestas.id', '=', 'indicador_productos.id_a')
+            ->leftJoin('dimensions', 'dimensions.id', '=', 'apuestas.id_d')
+            ->leftJoin('estrategias', 'estrategias.id', '=', 'dimensions.id_e')
+            ->leftJoin('dependencias', 'dependencias.id', '=', 'indicador_productos.id_d');
+
             // ✅ Aplicar filtro por dependencia, solo si $id_d es diferente de 0
-            if ($id_d != 0) {
-                $query->where('indicador_productos.id_d', $id_d); // <- Ajusta el nombre del campo si es otro
+            if ($id_d != '0') {
+                $query->where('dependencias.id', $id_d);
+            }
+            // ✅ Aplicar filtro por estrategia, solo si $id_est es diferente de 0
+            if ($id_est != '0') {
+                $query->where('estrategias.id', (int)$id_est);
+            }
+            // ✅ Aplicar filtro por dimensión, solo si $id_dim es diferente de 0
+            if ($id_dim != '0') {
+                $query->where('dimensions.id', (int)$id_dim);
+            }
+            // ✅ Aplicar filtro por apuesta, solo si $id_apu es diferente de 0
+            if ($id_apu != '0') {
+                $query->where('apuestas.id', (int)$id_apu);
             }
             $ips = $query
                 ->groupBy(

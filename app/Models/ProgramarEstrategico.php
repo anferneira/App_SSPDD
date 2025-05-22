@@ -30,7 +30,7 @@ class ProgramarEstrategico extends Model
         'id_ip',
     ];
 
-    public function indproducto2(): BelongsTo {
+    public function indproducto(): BelongsTo {
         return $this->belongsTo(IndicadorProducto::class, 'id_ip', 'id');
     }
 }

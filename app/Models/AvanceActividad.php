@@ -15,6 +15,7 @@ class AvanceActividad extends Model
         'avance_aa',
         'anio_aa',
         'trimestre_aa',
+        'descripcion_aa',
         'estado_aa',
         'id_a',
     ];

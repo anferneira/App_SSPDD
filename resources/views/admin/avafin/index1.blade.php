@@ -93,6 +93,41 @@
                             </div>
                         </div>
                     </div>
+                    <div class="row">
+                        <div class="col-sm-4">
+                            <div class="form-group m-2">
+                                <label for="id_e" class="position-relative" style="top: -25px;">Estratégia de Desarrollo</label>
+                                <select name="id_e" id="id_e" class="form-control position-relative" style="top: -25px;" data-live-search="true">
+                                    <option value="0" selected>Todos</option>
+                                    @foreach ($estrategias as $e)
+                                        <option value="{{ $e->id }}">{{ $e->codigo_e.'. '.$e->nombre_e }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-sm-4">
+                            <div class="form-group m-2">
+                                <label for="id_dim" class="position-relative" style="top: -25px;">Dimensión de Desarrollo</label>
+                                <select name="id_dim" id="id_dim" class="form-control position-relative" style="top: -25px;" data-live-search="true">
+                                    <option value="0" selected>Todos</option>
+                                    @foreach ($dimensions as $dim)
+                                        <option value="{{ $dim->id }}">{{ $dim->codigo_d.'. '.$dim->nombre_d }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-sm-4">
+                            <div class="form-group m-2">
+                                <label for="id_a" class="position-relative" style="top: -25px;">Apuesta de Desarrollo</label>
+                                <select name="id_a" id="id_a" class="form-control position-relative" style="top: -25px;" data-live-search="true">
+                                    <option value="0" selected>Todos</option>
+                                    @foreach ($apuestas as $a)
+                                        <option value="{{ $a->id }}">{{ $a->codigo_a.'. '.$a->nombre_a }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                    </div>
                     <table class="display" id="avances" style="width: 100%;">
                         <thead class="text-center">
                             <tr class="text-center">
@@ -335,7 +370,7 @@
                                             $est = '';
                                     @endphp
                                     <td class="text-center">
-                                        <a href="{{ route('ver_ind1', $ip->id) }}" class="ver btn btn-sm btn-info" title="ver actividades">
+                                        <a href="{{ route('ver_avanfin', $ip->id) }}" class="ver btn btn-sm btn-info" title="ver avances financieros" {{ $est }}>
                                             <i class="fas fa-eye"></i>
                                         </a>
                                     </td>
@@ -431,20 +466,20 @@
 
         // Mostrar indicadores en rezagos, ejecutado 100%, sin programar y por dependencia
         function actualizarTablaRezago() {
-            const baseRutaRezago = "{{ route('rezago_ind_dep', ['id' => '__ID__']) }}";
-            const baseRutaVer = "{{ route('ver_ind1', ['id' => '__ID__']) }}";
-            var rez = document.getElementById('rezago').value;
             var id_dep = document.getElementById('id_d').value;
-            var id = rez + "-" + id_dep;
-            var urlRez = baseRutaRezago.replace('__ID__', id);
+            const baseRutaVer = "{{ route('ver_ind2', ['id' => '__ID__']) }}";
+            const baseRutaVerAva = "{{ route('ver_avanfin', ['id' => '__ID__']) }}";
+            var rez = document.getElementById('rezago').value;            
+            var urlRez = baseRutaVer.replace('__ID__', id_dep);
             $.ajax({
                 url: urlRez,
                 type: 'get',
                 success: function(data) {
+                    console.log(data);
                     let tabla = $('#avances').DataTable();
                     tabla.clear();
                     data.forEach(ip => {
-                        var AccionUrl = baseRutaVer.replace('__ID__', ip.id);
+                        var AccionUrl = baseRutaVerAva.replace('__ID__', ip.id);
                         var accion = '<td class="text-center">';
                         accion += '<a href="' + AccionUrl + '" class="ver btn btn-sm btn-info" title="ver actividades">';
                         accion += '<i class="fas fa-eye"></i></a></td>';
@@ -452,11 +487,11 @@
                             ip.id,
                             ip.codigo_ip,
                             ip.nombre_ip,
-                            renderPorcentaje(ip.porcentaje2024, ip.desemp2024),
-                            renderPorcentaje(ip.porcentaje2025, ip.desemp2025),
-                            renderPorcentaje(ip.porcentaje2026, ip.desemp2026),
-                            renderPorcentaje(ip.porcentaje2027, ip.desemp2027),
-                            renderPorcentaje(ip.porcentajecuatrenio, ip.desempcuatrenio),
+                            renderPorcentaje(ip.porcentaje_2024, ip.nivel_desempeno_2024),
+                            renderPorcentaje(ip.porcentaje_2025, ip.nivel_desempeno_2025),
+                            renderPorcentaje(ip.porcentaje_2026, ip.nivel_desempeno_2026),
+                            renderPorcentaje(ip.porcentaje_2027, ip.nivel_desempeno_2027),
+                            renderPorcentaje(ip.porcentaje_cuatrenio, ip.nivel_desempeno_cuatrenio),
                             renderEstado(ip.estado_ip),
                             accion,
                         ]);

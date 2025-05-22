@@ -3,19 +3,26 @@
 namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
+use App\Models\Estrategia;
+use App\Models\Dimension;
+use App\Models\Apuesta;
 use App\Models\AvanceFinanciero;
 use App\Models\IndicadorProducto;
 use App\Models\Municipio;
 use App\Models\GrupoPoblacional;
 use App\Models\Dependencia;
 use App\Imports\csvImportAvaFin;
+use App\Models\DependenciaDimension;
+use App\Models\DependenciaEstrategia;
 use App\Models\GrupoPoblacion;
+use App\Models\ProgramarFinanciero;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Maatwebsite\Excel\Facades\Excel;
 use Maatwebsite\Excel\HeadingRowImport;
 use Illuminate\Support\Facades\DB;
+use PhpParser\Node\Stmt\Foreach_;
 
 class AvanceFinancieroController extends Controller
 {
@@ -29,6 +36,9 @@ class AvanceFinancieroController extends Controller
                                 ->where('id', '!=', 1)
                                 ->where('id', '!=', 31)
                                 ->where('id', '!=', 32)->get();
+            $estrategias = Estrategia::orderBy('codigo_e')->get();
+            $dimensions = Dimension::orderBy('codigo_d')->get();
+            $apuestas = Apuesta::orderBy('codigo_a')->get();
             
         // Definir años y trimestres disponibles
         $anios = [
@@ -113,7 +123,98 @@ class AvanceFinancieroController extends Controller
 
         if (Auth::check()) {
             //return response()->json($ips);
-            return view('admin/avafin.index1', compact('usuario', 'nombre', 'rol', 'dependencia', 'ips', 'dependencias'));
+            return view('admin/avafin.index1', compact('usuario', 'nombre', 'rol', 'dependencia', 'ips', 'dependencias', 'estrategias', 'dimensions', 'apuestas'));
+        }
+        else {
+            return Redirect::route('login');
+        }
+    }
+
+    public function ver_ind2($id) {
+        // Definir años y trimestres disponibles
+        $anios = [
+            2024 => [3, 4],
+            2025 => [1, 2, 3, 4],
+            2026 => [1, 2, 3, 4],
+            2027 => [1, 2, 3, 4],
+        ];
+
+        // Definir los campos a sumar
+        $campos = ['icld', 'icde', 'sgpe', 'sgps', 'sgpapsb', 'rped', 'sgr', 'cr', 'g', 'co', 'or'];
+
+        // Iniciar la consulta base trayendo todos los campos de indicador_productos
+        $query = DB::table('indicador_productos AS ip')
+            ->select('ip.*')->where('ip.id_d', $id);
+
+        // Agregar selectRaw dinámicamente para cada año
+        foreach ($anios as $anio => $trimestres) {
+            foreach (['programado', 'avance'] as $tipo) {
+                $selects = [];
+                foreach ($campos as $campo) {
+                    if ($tipo === 'programado') {
+                        foreach ($trimestres as $trimestre) {
+                            $columna = "{$campo}_{$anio}_{$trimestre}";
+                            $selects[] = "IFNULL(SUM(pf.{$columna}),0)";
+                        }
+                    } else {
+                        $selects[] = "IFNULL(SUM(CASE WHEN af.anio_af = {$anio} THEN af.{$campo} END),0)";
+                    }
+                }
+                $alias = "{$tipo}_{$anio}";
+                $query->selectRaw('(' . implode(' + ', $selects) . ') AS '.$alias);
+            }
+        }
+
+        // Relacionar las tablas
+        $query->leftJoin('programar_financieros AS pf', 'pf.id_ip', '=', 'ip.id')
+            ->leftJoin('avance_financieros AS af', 'af.id_ip', '=', 'ip.id')
+            ->groupBy('ip.id')
+            ->orderBy('ip.id', 'asc');
+
+        // Obtener resultados y calcular los porcentajes
+        $ips = $query->get()->map(function ($item) use ($anios) {
+            $total_programado = 0;
+            $total_avance = 0;
+
+            foreach ($anios as $anio => $trimestres) {
+                // Reemplazar coma por punto y convertir a float
+                $programado_raw = str_replace(',', '.', $item->{'programado_'.$anio});
+                $avance_raw = str_replace(',', '.', $item->{'avance_'.$anio});
+                $programado = (float) $programado_raw;
+                $avance = (float) $avance_raw;
+
+                $porcentaje = ($programado > 0) ? ($avance / $programado) * 100 : 0;
+
+                // Asegurar 2 decimales siempre (string)
+                //$item->{'programado_'.$anio} = number_format($programado, 2, '.', '');
+                //$item->{'avance_' . $anio} = number_format($avance, 2, '.', '');
+                if  ($programado > 0) {
+                    $item->{'porcentaje_'.$anio} = number_format($porcentaje, 2, '.', '');
+                    $item->{'nivel_desempeno_'.$anio} = $this->calcularNivelDesempeno($porcentaje);
+                }
+                else {
+                    $item->{'porcentaje_'.$anio} = "No programado";
+                    $item->{'nivel_desempeno_'.$anio} = "";
+                }
+                $total_programado += $programado;
+                $total_avance += $avance;
+            }
+
+            // Totales cuatrienio con 2 decimales
+            $item->programado_cuatrenio = number_format($total_programado, 2, '.', '');
+            $item->avance_cuatrenio = number_format($total_avance, 2, '.', '');
+            $porcentaje_cuatrenio = ($total_programado > 0) ? ($total_avance / $total_programado) * 100 : 0;
+            $item->porcentaje_cuatrenio = number_format($porcentaje_cuatrenio, 2, '.', '');
+            $item->nivel_desempeno_cuatrenio = $this->calcularNivelDesempeno($porcentaje_cuatrenio);
+
+            return $item;
+        });
+
+        //return response()->json($ips);
+
+        if (Auth::check()) {
+            return response()->json($ips);
+            //return view('admin/avafin.index1', compact('usuario', 'nombre', 'rol', 'dependencia', 'ips', 'dependencias'));
         }
         else {
             return Redirect::route('login');
@@ -221,9 +322,139 @@ class AvanceFinancieroController extends Controller
         return redirect()->route('listaravafins')->with('success', 'Avance Financiero creado correctamente');
     }
 
+    public function traer_financiero_anio($id) {
+        $progs = ProgramarFinanciero::where('id_ip', $id)->get();
+        return response()->json($progs);
+    }
+
     public function veravafin($id) {
         $avafin = AvanceFinanciero::with('indproducto1', 'municipios', 'poblacion')->find($id);
         return response()->json($avafin);
+    }
+
+    public function ver_avanfin($id) {
+        if (Auth::check()){
+            $usuario = Auth::user();
+                $nombre = $usuario->name;
+                $rol = $usuario->rol->nombre_r;
+                $dependencia = $usuario->dependencia->nombre_d;
+            $ip = IndicadorProducto::with('indproducto')->find($id);
+            $periodo = [
+                '_2024_3', '_2024_4', '_2025_1', '_2025_2', '_2025_3', '_2025_4',
+                '_2026_1', '_2026_2', '_2026_3', '_2026_4', '_2027_1', '_2027_2',
+                '_2027_3', '_2027_4'
+            ];
+            $campos = ['ICLD', 'ICDE', 'SGPE', 'SGPS', 'SGPAPSB', 'RPED', 'SGR', 'CR', 'G', 'CO', 'OR'];
+            foreach ($ip->indproducto as $pro) {
+                foreach ($periodo as $p) {
+                    foreach ($campos as $campo) {
+                        $pro->{$campo.$p} = str_replace(',', '.', $pro->{$campo.$p});
+                    }
+                }    
+            }
+            
+            $avaf = AvanceFinanciero::where('id_ip', $id)->get();
+            foreach ($avaf as $ava) {
+                $periodo_actual = '_' . $ava->anio_af . '_' . $ava->trimestre_af;
+
+                $total_avance = 0;
+                $total_programado = 0;
+
+                // Limpiar las comas de los avances
+                foreach ($campos as $campo) {
+                    $ava->$campo = str_replace(',', '.', $ava->$campo);
+                    $total_avance += (float) $ava->{$campo};
+                }
+                $ava->total_Avance = $total_avance;
+
+                foreach ($ip->indproducto as $pro) {
+                    foreach ($campos as $campo) {
+                        $valor_programado = str_replace(',', '.', $pro->{$campo.$periodo_actual});
+                        $total_programado += (float) $valor_programado;
+                    }                
+                }
+                $ava->total_Programado = $total_programado;
+
+                // Calcular porcentaje
+                $ava->porcentaje_periodo = ($total_programado > 0) ? ($total_avance / $total_programado) * 100 : 0;
+
+                $ava->porcentaje_periodo = number_format($ava->porcentaje_periodo, 2, '.', '');
+            
+
+                if ($ava->porcentaje_periodo > 0 && $ava->porcentaje_periodo < 40) {
+                    $ava->desempenio_periodo = "Crítico";
+                } else if ($ava->porcentaje_periodo >= 40 && $ava->porcentaje_periodo <= 60) {
+                    $ava->desempenio_periodo = "Bajo";
+                } else if ($ava->porcentaje_periodo > 60 && $ava->porcentaje_periodo <= 70) {
+                    $ava->desempenio_periodo = "Medio";
+                } else if ($ava->porcentaje_periodo > 70 && $ava->porcentaje_periodo <= 80) {
+                    $ava->desempenio_periodo = "Satisfactorio";
+                } else if ($ava->porcentaje_periodo > 80 && $ava->porcentaje_periodo <= 100) {
+                    $ava->desempenio_periodo = "Sobresaliente";
+                } else {
+                    $ava->desempenio_periodo = "Sobre Ejecutado";
+                }
+            }
+
+            // === SEGUNDO: calcular porcentaje anual ===
+            // Agrupar $avaf por anio_af
+            $avaf_por_anio = $avaf->groupBy('anio_af');
+
+            // Crear un array temporal con totales anuales
+            $porcentajes_anio = [];
+            $despempenio_anio = [];
+            foreach ($avaf_por_anio as $anio => $registros_del_anio) {
+                $total_avance_anio = $registros_del_anio->sum('total_Avance');
+                $total_programado_anio = $registros_del_anio->sum('total_Programado');
+                $porcentaje_anio = ($total_programado_anio > 0)
+                    ? ($total_avance_anio / $total_programado_anio) * 100
+                    : 0;
+
+                $porcentajes_anio[$anio] = $porcentaje_anio;
+                if ($porcentaje_anio > 0 && $porcentaje_anio < 40) {
+                    $porcentajes_anio[$anio] = number_format($porcentaje_anio, 2, '.', '');
+                    $despempenio_anio[$anio] = "Crítico";
+                } else if ($porcentaje_anio >= 40 && $porcentaje_anio <= 60) {
+                    $porcentajes_anio[$anio] = number_format($porcentaje_anio, 2, '.', '');
+                    $despempenio_anio[$anio] = "Bajo";
+                } else if ($porcentaje_anio > 60 && $porcentaje_anio <= 70) {
+                    $porcentajes_anio[$anio] = number_format($porcentaje_anio, 2, '.', '');
+                    $despempenio_anio[$anio] = "Medio";
+                } else if ($porcentaje_anio > 70 && $porcentaje_anio <= 80) {
+                    $porcentajes_anio[$anio] = number_format($porcentaje_anio, 2, '.', '');
+                    $despempenio_anio[$anio] = "Satisfactorio";
+                } else if ($porcentaje_anio > 80 && $porcentaje_anio <= 100) {
+                    $porcentajes_anio[$anio] = number_format($porcentaje_anio, 2, '.', '');
+                    $despempenio_anio[$anio] = "Sobresaliente";
+                } else {
+                    $porcentajes_anio[$anio] = number_format($porcentaje_anio, 2, '.', '');
+                    $despempenio_anio[$anio] = "Sobre Ejecutado";
+                }
+
+                $ava->desempenio_anio = $despempenio_anio[$anio] ?? '';
+            }
+
+            // === TERCERO: agregar porcentaje_anio a cada registro ===
+            foreach ($avaf as $ava) {
+                $anio = $ava->anio_af;
+                $ava->porcentaje_anio = $porcentajes_anio[$anio] ?? 0;
+                //$ava->porcentaje_anio = number_format($ava->porcentaje_anio, 2, '.', '');
+                $ava->desempenio_anio = $despempenio_anio[$anio] ?? '';
+            }
+
+            //return response()->json([$ip, $avaf]);
+            return view('admin/avafin.index2', compact('usuario', 'nombre', 'rol', 'dependencia', 'ip', 'avaf'));
+        }
+        return Redirect::route('login');
+    }
+
+    public function ver_financiero($id) {
+        $valor = array_map('trim', explode('_', $id));
+        $anio = $valor[0];
+        $trim = $valor[1];
+        $ind = $valor[2];
+        $rez = $valor[3];
+        
     }
 
     public function editaravafin($id) {

@@ -572,7 +572,7 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
         @yield('scripts')
         <script>
-            let inactivityTime = 5 * 60 * 1000; // 5 minutos en milisegundos
+            let inactivityTime = 60 * 60 * 1000; // 60 minutos en milisegundos
             let timeout;
         
             function resetTimer() {

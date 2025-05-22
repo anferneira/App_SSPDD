@@ -494,6 +494,9 @@ Route::prefix('avaact')
             Route::get('/rezago_i_d/{id}', [AvanceActividadController::class, 'rezago_ind_dep'])->name('rezago_ind_dep');
             Route::get('/rezago_avance/{id}', [AvanceActividadController::class, 'rezago_avance'])->name('rezago_avance');
             Route::get('/veravaest/{id}', [AvanceActividadController::class, 'veravaest'])->name('veravaest');
+            Route::get('/verind_est_dim_apu/{id}', [AvanceActividadController::class, 'ind_est_dim_apu'])->name('ind_est_dim_apu');
+            Route::get('/cargar_select_e_d_a_d/{id}', [AvanceActividadController::class, 'cargar_select_e_d_a_d'])->name('cargar_select_e_d_a_d');
+            Route::post('/guardarlogroip', [AvanceActividadController::class, 'guardarlogroip'])->name('guardarlogroip');
         });
 
 // Rutas del CRUD de Avance Estratégico por Indicador de Producto
@@ -520,12 +523,16 @@ Route::prefix('avafin')
             Route::get('/listaravafins', [AvanceFinancieroController::class, 'listaravafins'])->name('listaravafins');
             Route::post('/guardaravafin', [AvanceFinancieroController::class, 'guardaravafin'])->name('guardaravafin');
             Route::get('/veravaindfin/{id}', [AvanceFinancieroController::class, 'ver_avances'])->name('ver_avances');
+            Route::get('/avances_ind/{id}', [AvanceFinancieroController::class, 'ver_avanfin'])->name('ver_avanfin');
             Route::get('/indicador/avances/anio/{id}', [AvanceFinancieroController::class, 'veravances_anio'])->name('veravances_anio');
             Route::get('/veravafin/{id}', [AvanceFinancieroController::class, 'veravafin'])->name('veravafin');
             Route::get('/editaravafin/{id}', [AvanceFinancieroController::class, 'editaravafin'])->name('editaravafin');
             Route::post('/actualizaravafin', [AvanceFinancieroController::class, 'actualizaravafin'])->name('actualizaravafin');
             Route::post('/eliminaravafin/{id}', [AvanceFinancieroController::class, 'eliminaravafin'])->name('eliminaravafin');
             Route::post('/importar', [AvanceFinancieroController::class, 'csvavafins'])->name('csvavafins');
+            Route::get('/indicador/avance_financiero/{id}', [AvanceFinancieroController::class, 'verfinanciero_anio'])->name('verfinanciero_anio');
+            Route::get('/verfinind/{id}', [AvanceFinancieroController::class, 'ver_ind2'])->name('ver_ind2');
+            Route::get('/trae_financiero_anio/{id}', [AvanceFinancieroController::class, 'traer_financiero_anio'])->name('traer_financiero_anio');
         });
 
 
