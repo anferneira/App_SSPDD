@@ -488,6 +488,8 @@ Route::prefix('avaact')
             Route::post('/eliminarevidact/{id}', [AvanceActividadController::class, 'eliminarevidact'])->name('eliminarevidact');
             Route::post('/importar', [AvanceActividadController::class, 'csvavaacts'])->name('csvavaacts');
             Route::post('/guardarevidenciaip', [AvanceActividadController::class, 'guardarevidenciasip'])->name('guardarevidenciasip');
+            Route::get('/editarevidenciaip/{id}', [AvanceActividadController::class, 'editarevidenciasip'])->name('editarevidenciasip');
+            Route::post('/actualizarevidenciaip', [AvanceActividadController::class, 'actualizarevidenciasip'])->name('actualizarevidenciasip');
             Route::get('/indicadores_dep/{id}', [AvanceActividadController::class, 'ind_dep1'])->name('ind_dep1');
             Route::get('/indicadores_act/{id}', [AvanceActividadController::class, 'ind_act'])->name('ind_act');
             Route::get('/rezago_ind_act/{id}', [AvanceActividadController::class, 'rezago1'])->name('rezago1');
@@ -497,6 +499,8 @@ Route::prefix('avaact')
             Route::get('/verind_est_dim_apu/{id}', [AvanceActividadController::class, 'ind_est_dim_apu'])->name('ind_est_dim_apu');
             Route::get('/cargar_select_e_d_a_d/{id}', [AvanceActividadController::class, 'cargar_select_e_d_a_d'])->name('cargar_select_e_d_a_d');
             Route::post('/guardarlogroip', [AvanceActividadController::class, 'guardarlogroip'])->name('guardarlogroip');
+            Route::get('/editarlogroip/{id}', [AvanceActividadController::class, 'editarlogroip'])->name('editarlogroip');
+            Route::post('/actualizarlogroip', [AvanceActividadController::class, 'actualizarlogroip'])->name('actualizarlogroip');
         });
 
 // Rutas del CRUD de Avance Estratégico por Indicador de Producto

@@ -558,6 +558,60 @@ class AvanceActividadController extends Controller
         return redirect()->route('ver_ind1', ['id' => $id])->with('error', 'No se guardaron las evidencias para el indicador '.$ip->codigo_ip.' en el periodo '.$request->id_anio_eip.'_'.$request->id_trimestre_eip);                
     }
 
+    public function editarevidenciasip($id) {
+        $valor = array_map('trim', explode('_', $id));
+        if ($valor[1] == '0' || $valor[2] == '0')
+            return null;
+        $datos = Evidencias::where('id_ip', $valor[0])
+                                    ->where('anio_eip', $valor[1])
+                                    ->where('trimestre_eip', $valor[2])->get();
+        return response()->json($datos);
+    }
+
+    public function actualizarevidenciasip(Request $request) {
+        $ip = IndicadorProducto::where('codigo_ip', $request->id_ip)->get();
+        foreach ($ip as $i) {
+            $id = $i->id;
+            $codigo_ip = str_replace([',', '.'], '_', $i->codigo_ip);
+        }
+        $evi_ip = Evidencias::where('id_ip', $id)
+                                    ->where('anio_eip', $request->id_anio)
+                                    ->where('trimestre_eip', $request->id_trimestre)->get();
+        
+        if ($evi_ip->count() == 5)
+            return redirect()->route('listaravaacts')->with('error', 'Ya hay 5 evidencias para el indicador '.$codigo_ip.' para el periodo '.$request->id_anio.'_'.$request->id_trimestre);
+        $request->validate([
+            'id_anio' => 'required',
+            'id_trimestre' => 'required',
+            'id_ip' => 'required|exists:actividads,id'
+        ]);
+        $tot = 0;
+        // Guarda las evidencias en el disco
+        if ($request->hasFile('evidencias')) {
+            foreach ($request->file('evidencias') as $archivo) {
+                $tot = $tot + 1;
+                $nombreArchivo = 'Ind_'.$codigo_ip.'_Periodo_'.$request->id_anio.'_'.$request->id_trimestre.'_'.$archivo->getClientOriginalName();
+                $ruta = $archivo->storeAs('evidencias', $nombreArchivo, 'public');
+                // Guardar las evidencias en la tabla
+                $evid = new Evidencias();
+                $evid->evidencia = $ruta;
+                $evid->anio_eip = $request->input('id_anio');
+                $evid->trimestre_eip = $request->input('id_trimestre');
+                $evid->id_ip = $id;
+                $evid->estado_e = "Activo";
+                $evid->save();
+            }
+        }
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Se guardaron '.$tot.' evidencias para el indicador '.$codigo_ip.' en el periodo '.$request->id_anio.'_'.$request->id_trimestre,
+                'redirect' => route('ver_ind1', ['id' => $id])
+            ]);
+        }
+        return redirect()->route('ver_ind1', ['id' => $id])->with('error', 'No se guardaron las evidencias para el indicador '.$ip->codigo_ip.' en el periodo '.$request->id_anio_eip.'_'.$request->id_trimestre_eip);                
+    }
+
     public function guardarlogroip(Request $request) {
         //return response()->json($request);
         $request->validate([
@@ -590,6 +644,37 @@ class AvanceActividadController extends Controller
         $logro_ip->estado_lip = 'Activo';
         $logro_ip->save();
         return redirect()->route('ver_ind1', ['id' => $id])->with('success', 'Se guardó el logro para el indicador '.$codigo_ip.' en el periodo '.$request->id_anio.'_'.$request->id_trimestre);
+    }
+
+    public function editarlogroip($id) {
+        $valor = array_map('trim', explode('_', $id));
+        if ($valor[1] == '0' || $valor[2] == '0')
+            return null;
+        $dato = LogroIndicador::where('id_ip', $valor[0])
+                                    ->where('anio_lip', $valor[1])
+                                    ->where('trimestre_lip', $valor[2])->get();
+        return response()->json($dato);
+    }
+
+    public function actualizarlogroip(Request $request) {
+        $request->validate([
+            'id_anio' => 'required',
+            'id_trimestre' => 'required',
+            'id_ip' => 'required|exists:actividads,id',
+            'logro_ip' => 'required',
+        ]);
+        $ip = IndicadorProducto::find($request->input('id_ip'));
+        $logro_ip = LogroIndicador::where('id_ip', $request->id_ip)
+                                    ->where('anio_lip', $request->id_anio)
+                                    ->where('trimestre_lip', $request->id_trimestre)->get();
+        foreach ($logro_ip as $l_ip) {
+            $l_ip->logro = $request->logro_ip;
+            $l_ip->anio_lip = $request->id_anio;
+            $l_ip->trimestre_lip = $request->id_trimestre;
+            $l_ip->id_ip = $request->id_ip;
+            $l_ip->save();
+        }
+        return redirect()->route('ver_ind1', ['id' => $request->id_ip])->with('success', 'Se actualizó el logro para el indicador '.$ip->codigo_ip.' en el periodo '.$request->id_anio.'_'.$request->id_trimestre);
     }
 
     public function ver_ind1($id) {
@@ -1104,7 +1189,29 @@ class AvanceActividadController extends Controller
                 $item->total_2026 = 'No programado';
                 $item->total_2027 = 'No programado';
             }
+
+            $logros = LogroIndicador::where('id_ip', $id)->get();
+            
+            
+            $datos = (object) $datos->toArray();
+            
+            $datos->logros = [
+                '2024' => [],
+                '2025' => [],
+                '2026' => [],
+                '2027' => [],
+            ];
+            foreach ($logros as $logro) {
+                if (in_array($logro->anio_lip, ['2024', '2025', '2026', '2027'])) {
+                    $datos->logros[$logro->anio_lip][] = [
+                        'logro' => $logro->logro,
+                        'anio_lip' => $logro->anio_lip,
+                        'trimestre_lip' => $logro->trimestre_lip,
+                    ];
+                }
+            }
         }
+        
         return response()->json($datos);
     }
 
@@ -1112,13 +1219,14 @@ class AvanceActividadController extends Controller
         $avaact = Actividad::join('avance_actividads', 'actividads.id', '=', 'avance_actividads.id_a')
                             ->join('indicador_productos', 'indicador_productos.id', '=', 'actividads.id_ip')
                             ->join('dependencias', 'dependencias.id', '=', 'indicador_productos.id_d')
-                            ->select('avance_actividads.id as id', 'indicador_productos.id as id_ip', 'indicador_productos.codigo_ip as codigo_ip', 'dependencias.id as id_d', 'dependencias.nombre_d as nombre_d', 'avance_actividads.avance_aa as avance_aa', 'actividads.aporte_a as aporte_a', 'actividads.id as id_a', 'actividads.codigo_a as codigo_a', 'actividads.anio_a as anio', 'actividads.trimestre_a as trimestre', 'avance_actividads.estado_aa as estado')
+                            ->select('avance_actividads.id as id', 'avance_actividads.descripcion_aa as descripcion_aa', 'indicador_productos.id as id_ip', 'indicador_productos.codigo_ip as codigo_ip', 'dependencias.id as id_d', 'dependencias.nombre_d as nombre_d', 'avance_actividads.avance_aa as avance_aa', 'actividads.aporte_a as aporte_a', 'actividads.id as id_a', 'actividads.codigo_a as codigo_a', 'actividads.anio_a as anio', 'actividads.trimestre_a as trimestre', 'avance_actividads.estado_aa as estado')
                             ->where('actividads.id', $id)
                             ->groupBy(
                                 'avance_actividads.id',
                                 'indicador_productos.id',
                                 'dependencias.id',
                                 'avance_actividads.avance_aa',
+                                'avance_actividads.descripcion_aa',
                                 'actividads.aporte_a',
                                 'actividads.id',
                                 'actividads.anio_a',
@@ -1137,6 +1245,7 @@ class AvanceActividadController extends Controller
             'avance_oculto' => 'required',
             'anio' => 'required',
             'trimestre' => 'required',
+            'desc_act' => 'required',
             'id_a' => 'required|exists:actividads,id'
         ]);
         $avance = AvanceActividad::where('id_a', $request->input('id_a'))
@@ -1155,6 +1264,7 @@ class AvanceActividadController extends Controller
         $avaact->anio_aa = $request->input('anio');
         $avaact->trimestre_aa = $request->input('trimestre');
         $avaact->id_a = $request->input('id_a');
+        $avaact->descripcion_aa = $request->input('desc_act');
         $avaact->estado_aa = $request->input('estado');
         $avaact->save();
         

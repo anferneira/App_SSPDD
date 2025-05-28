@@ -160,7 +160,11 @@
                                         @if ($ip->porcentaje2024 == "No programado")
                                             {{ $ip->porcentaje2024 }}
                                         @else
-                                            {{ $ip->porcentaje2024.' %' }}
+                                            @if ($ip->porcentaje2024 > 100)
+                                                100.00 %
+                                            @else
+                                                {{ $ip->porcentaje2024.' %' }}    
+                                            @endif
                                             <div class="progress" style="height: 10px;">
                                                 <div class="progress-bar bg-success" role="progressbar" 
                                                     style="width: {{ $ip->porcentaje2024 }}%;" 
@@ -200,7 +204,11 @@
                                         @if ($ip->porcentaje2025 == "No programado")
                                             {{ $ip->porcentaje2025 }}
                                         @else
-                                            {{ $ip->porcentaje2025.' %' }}
+                                            @if ($ip->porcentaje2025 > 100)
+                                                100.00 %
+                                            @else
+                                                {{ $ip->porcentaje2025.' %' }}    
+                                            @endif
                                             <div class="progress" style="height: 10px;">
                                                 <div class="progress-bar bg-success" role="progressbar" 
                                                     style="width: {{ $ip->porcentaje2025 }}%;" 
@@ -240,7 +248,11 @@
                                         @if ($ip->porcentaje2026 == "No programado")
                                             {{ $ip->porcentaje2026 }}
                                         @else
-                                            {{ $ip->porcentaje2026.' %' }}
+                                            @if ($ip->porcentaje2026 > 100)
+                                                100.00 %
+                                            @else
+                                                {{ $ip->porcentaje2026.' %' }}    
+                                            @endif
                                             <div class="progress" style="height: 10px;">
                                                 <div class="progress-bar bg-success" role="progressbar" 
                                                     style="width: {{ $ip->porcentaje2026 }}%;" 
@@ -280,7 +292,11 @@
                                         @if ($ip->porcentaje2027 == "No programado")
                                             {{ $ip->porcentaje2027 }}
                                         @else
-                                            {{ $ip->porcentaje2027.' %' }}
+                                            @if ($ip->porcentaje2027 > 100)
+                                                100.00 %
+                                            @else
+                                                {{ $ip->porcentaje2027.' %' }}    
+                                            @endif
                                             <div class="progress" style="height: 10px;">
                                                 <div class="progress-bar bg-success" role="progressbar" 
                                                     style="width: {{ $ip->porcentaje2027 }}%;" 
@@ -317,7 +333,11 @@
                                         @endif
                                     </td>
                                     <td class="text-center">
-                                        {{ $ip->porcentajecuatrenio.' %' }}
+                                        @if ($ip->porcentajecuatrenio > 100)
+                                            100.00 %
+                                        @else
+                                            {{ $ip->porcentajecuatrenio.' %' }}    
+                                        @endif
                                         <div class="progress" style="height: 10px;">
                                             <div class="progress-bar bg-success" role="progressbar" 
                                                  style="width: {{ $ip->porcentajecuatrenio }}%;" 
@@ -610,7 +630,12 @@
             if (porcentaje === "No programado") {
                 html += porcentaje;
             } else {
-                html += `${porcentaje} %`;
+                if (porcentaje > 100) {
+                    html += '100.00 %'
+                }
+                else {
+                    html += `${porcentaje} %`;
+                }
                 html += `
                     <div class="progress" style="height: 10px;">
                         <div class="progress-bar bg-success" role="progressbar" 

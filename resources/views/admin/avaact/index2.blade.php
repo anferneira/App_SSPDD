@@ -88,10 +88,16 @@
                                             <button type="button" class="btn btn-sm btn-primary" data-toggle="modal" data-target="#guardarevidenciasipmodal" title="cargar evidencias del indicador">
                                                 <i class="fas fa-cloud-upload"></i>
                                             </button>
+                                            <button type="button" class="btn btn-sm btn-warning" data-toggle="modal" data-target="#editarevidenciasipmodal" title="cargar evidencias del indicador">
+                                                <i class="fas fa-cloud-upload"></i>
+                                            </button>
                                             <button type="button" class="btn btn-sm btn-success" data-toggle="modal" data-target="#verevidenciasipmodal" title="ver evidencias del indicador">
                                                 <i class="fas fa-solid fa-file"></i>
                                             </button>
                                             <button type="button" class="btn btn-sm btn-primary" data-toggle="modal" data-target="#guardarlogrosipmodal" title="agregar logros del indicador">
+                                                <i class="fas fa-solid fa-trophy"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-warning" data-toggle="modal" data-target="#editarlogrosipmodal" title="editar logros del indicador">
                                                 <i class="fas fa-solid fa-trophy"></i>
                                             </button>
                                         </td>
@@ -441,6 +447,17 @@
                                     <b class="badge"></b>
                                 </span>
                             </div>
+                            <div class="row">
+                                <div class="col-sm-12">
+                                    <div class="form-group m-2">
+                                        <label for="desc_act" class="position-relative">Descripción del Periodo</label>
+                                        <textarea name="desc_act" id="desc_act_editar" class="form-control" placeholder="Justificación del logro" required></textarea>
+                                        <div class="d-flex justify-content-end mt-1">
+                                            <span class="badge btn-danger" id="max_logro_act_editar">0</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                             <div class="form-group m-2">
                                 <label for="estado">Estado</label>
                                 <select name="estado" id="estado" class="form-control" style="width: 100%">
@@ -451,7 +468,7 @@
                             </div>
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
-                                <button type="submit" class="btn btn-primary">Guardar</button>
+                                <button type="submit" class="btn btn-primary" id="envia_act_editar">Guardar</button>
                             </div>
                         </form>
                     </div>
@@ -569,6 +586,17 @@
                                     </tbody>
                                 </table>
                                 <div class="modal-body">
+                                    <table id="tabla_logros_2024">
+                                        <thead>
+                                            <th class="text-center">Periodo</th>
+                                            <th class="text-center">Justificación</th>
+                                        </thead>
+                                        <tbody id="tbody-logros_2024_ip">
+                                            
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="modal-body">
                                     <table id="ver_evi_ip_2024">
                                         <thead>
                                             <th class="text-center">Archivo</th>
@@ -664,6 +692,17 @@
                                         </tr>
                                     </tbody>
                                 </table>
+                                <div class="modal-body">
+                                    <table id="tabla_logros_2025">
+                                        <thead>
+                                            <th class="text-center">Periodo</th>
+                                            <th class="text-center">Justificación</th>
+                                        </thead>
+                                        <tbody id="tbody-logros_2025_ip">
+                                            
+                                        </tbody>
+                                    </table>
+                                </div>
                                 <div class="modal-body">
                                     <table id="ver_evi_ip_2025">
                                         <thead>
@@ -761,6 +800,17 @@
                                     </tbody>
                                 </table>
                                 <div class="modal-body">
+                                    <table id="tabla_logros_2026">
+                                        <thead>
+                                            <th class="text-center">Periodo</th>
+                                            <th class="text-center">Justificación</th>
+                                        </thead>
+                                        <tbody id="tbody-logros_2026_ip">
+                                            
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="modal-body">
                                     <table id="ver_evi_ip_2026">
                                         <thead>
                                             <th class="text-center">Archivo</th>
@@ -857,6 +907,17 @@
                                     </tbody>
                                 </table>
                                 <div class="modal-body">
+                                    <table id="tabla_logros_2027">
+                                        <thead>
+                                            <th class="text-center">Periodo</th>
+                                            <th class="text-center">Justificación</th>
+                                        </thead>
+                                        <tbody id="tbody-logros_2027_ip">
+                                            
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="modal-body">
                                     <table id="ver_evi_ip_2027">
                                         <thead>
                                             <th class="text-center">Archivo</th>
@@ -949,6 +1010,84 @@
                             </table>
                             <div class="mt-3">
                                 <button class="btn btn-success" type="submit">Guardar Evidencias</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        
+        <div class="modal fade" id="editarevidenciasipmodal">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary">
+                        <h5 class="modal-title" id="exampleModalLabel">Editar Evidencias del Indicador - {{ $ip->codigo_ip }}</h5>
+                        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="false">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="formularioEvidenciasEditar" action="{{ route('actualizarevidenciasip') }}" method="POST" enctype="multipart/form-data">
+                            @csrf
+                            <input type="hidden" name="id_ip" id="id_ip_e_editar" value="{{ $ip->id }}">
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <div class="form-group m-2">
+                                        <label for="id_anio" class="position-relative" style="top: -25px;">Año</label>
+                                        <select name="id_anio" id="id_anio_eip_editar" class="form-control position-relative" style="top: -25px;" data-live-search="true">
+                                            <option value="0" selected>Todos</option>
+                                            <option value="2024">2024</option>
+                                            <option value="2025">2025</option>
+                                            <option value="2026">2026</option>
+                                            <option value="2027">2027</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="form-group m-2">
+                                        <label for="id_trimestre" class="position-relative" style="top: -25px;">Trimestre</label>
+                                        <select name="id_trimestre" id="id_trimestre_eip_editar" class="form-control position-relative" style="top: -25px;" data-live-search="true">
+                                            <option value="0" selected>Todos</option>
+                                            <option value="1">1</option>
+                                            <option value="2">2</option>
+                                            <option value="3">3</option>
+                                            <option value="4">4</option>      
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <!-- Input de archivo oculto -->
+                                <label for="evidencias-editar" class="btn btn-primary">Seleccionar Evidencias (PDF y/o Imagen):</label>
+                                <input 
+                                    type="file" 
+                                    name="evidencias[]" 
+                                    id="evidencias-editar"
+                                    class="form-control"
+                                    accept="application/pdf, image/*" 
+                                    multiple 
+                                    style="display: none;"
+                                >
+                            </div>
+                            <div>
+                                <span class="badge">Nota: Se permite cargar hasta 5 archivos en formato pdf o imágen</span>
+                            </div>
+                            <table id="tabla-archivos-editar" style="display: none;">
+                                <thead class="thead-dark">
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Nombre</th>
+                                        <th>Tipo</th>
+                                        <th>Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbody-archivos-editar">
+                                    <!-- Aquí se agregarán dinámicamente los archivos -->
+                                </tbody>
+                            </table>
+                            <div class="mt-3">
+                                <button class="btn btn-success" type="submit">Actualizar Evidencias</button>
                             </div>
                         </form>
                     </div>
@@ -1076,6 +1215,68 @@
                 </div>
             </div>
         </div>
+
+        <div class="modal fade" id="editarlogrosipmodal">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary">
+                        <h5 class="modal-title" id="exampleModalLabel">Editar Logro del Indicador - {{ $ip->codigo_ip }}</h5>
+                        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="false">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="formularioLogrosEditar" action="{{ route('actualizarlogroip') }}" method="POST" enctype="multipart/form-data">
+                            @csrf
+                            <input type="hidden" name="id_ip" id="id_ip_e" value="{{ $ip->id }}">
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <div class="form-group m-2">
+                                        <label for="id_anio" class="position-relative" style="top: -25px;">Año</label>
+                                        <select name="id_anio" id="id_anio_lip_editar" class="form-control position-relative" style="top: -25px;" data-live-search="true">
+                                            <option value="0" selected>Todos</option>
+                                            <option value="2024">2024</option>
+                                            <option value="2025">2025</option>
+                                            <option value="2026">2026</option>
+                                            <option value="2027">2027</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div class="form-group m-2">
+                                        <label for="id_trimestre" class="position-relative" style="top: -25px;">Trimestre</label>
+                                        <select name="id_trimestre" id="id_trimestre_lip_editar" class="form-control position-relative" style="top: -25px;" data-live-search="true">
+                                            <option value="0" selected>Todos</option>
+                                            <option value="1">1</option>
+                                            <option value="2">2</option>
+                                            <option value="3">3</option>
+                                            <option value="4">4</option>      
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row mb-0">
+                                <span class="badge">Nota: Ingrese mínimo 500 caracteres para la justificación</span>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-12">
+                                    <div class="form-group m-2">
+                                        <label for="logro_ip" class="position-relative">Logro del Periodo</label>
+                                        <textarea name="logro_ip" id="logro_ip_editar" class="form-control" placeholder="Justificación del logro" required></textarea>
+                                        <div class="d-flex justify-content-end mt-1">
+                                            <span class="badge btn-danger" id="max_logro_ip_editar">0</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <button class="btn btn-success" id="envia_logro_editar" type="submit" disabled>Guardar Logro</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
     </section>
 @endsection
 
@@ -1084,16 +1285,24 @@
         
         document.addEventListener('DOMContentLoaded', function () {
             const formularioEvidencias = document.getElementById('formularioEvidencias');
+            const formularioEvidenciasEditar = document.getElementById('formularioEvidenciasEditar');
             const inputip = document.getElementById('id_ip_e');
             const selectanio = document.getElementById('id_anio_eip');
+            const selectanioeditar = document.getElementById('id_anio_eip_editar');
             const selecttri = document.getElementById('id_trimestre_eip');
+            const selecttrieditar = document.getElementById('id_trimestre_eip_editar');
             const inputEvidencias = document.getElementById('evidencias');
+            const inputEvidenciasEditar = document.getElementById('evidencias-editar');
             const labelEvidencias = document.querySelector("label[for='evidencias']");
+            const labelEvidenciasEditar = document.querySelector("label[for='evidencias-editar']");
             const tablaArchivos = document.getElementById('tabla-archivos');
+            const tablaArchivosEditar = document.getElementById('tabla-archivos-editar');
             const tbodyArchivos = document.getElementById('tbody-archivos');
-            //const formulario = document.querySelector("form[action*='guardaravaact']");
+            const tbodyArchivosEditar = document.getElementById('tbody-archivos-editar');
+            const tbodyLogrosIp = document.getElementById('tbody-logro_ip');
             const maxArchivos = 5;
             let archivosSeleccionados = [];
+            let archivosSeleccionadosEditar = [];
             
             function obtenerIcono(tipo) {
                 if (tipo === 'application/pdf') {
@@ -1105,7 +1314,7 @@
 
             function actualizarListaArchivos() {
                 tbodyArchivos.innerHTML = ''; 
-
+                alert(1);
                 archivosSeleccionados.forEach((archivo, index) => {
                     const fila = document.createElement('tr');
                     fila.innerHTML = `
@@ -1119,6 +1328,24 @@
 
                 labelEvidencias.style.display = archivosSeleccionados.length >= maxArchivos ? 'none' : 'inline-block';
                 tablaArchivos.style.display = archivosSeleccionados.length > 0 ? 'table' : 'none';
+            }
+
+            function actualizarListaArchivosEditar() {
+                tbodyArchivosEditar.innerHTML = ''; 
+                alert(0);
+                archivosSeleccionadosEditar.forEach((archivo, index) => {
+                    const fila = document.createElement('tr');
+                    fila.innerHTML = `
+                        <td class="text-center">${index + 1}</td>
+                        <td>${archivo.name}</td>
+                        <td class="text-center">${obtenerIcono(archivo.type)}</td>
+                        <td class="text-center"><button class="btn btn-danger btn-sm eliminar-archivo-editar" data-index="${index}"><i class="fas fa-trash-alt"></i></button></td>
+                    `;
+                    tbodyArchivosEditar.appendChild(fila);
+                });
+
+                labelEvidenciasEditar.style.display = archivosSeleccionadosEditar.length >= maxArchivos ? 'none' : 'inline-block';
+                tablaArchivosEditar.style.display = archivosSeleccionadosEditar.length > 0 ? 'table' : 'none';
             }
 
             inputEvidencias.addEventListener('change', function (e) {
@@ -1143,11 +1370,41 @@
                 actualizarListaArchivos();
             });
 
+            inputEvidenciasEditar.addEventListener('change', function (e) {
+                const nuevosArchivos = Array.from(e.target.files);
+
+                if (archivosSeleccionadosEditar.length + nuevosArchivos.length > maxArchivos) {
+                    alert(`Solo puedes agregar hasta ${maxArchivos} archivos.`);
+                    e.target.value = ''; 
+                    return;
+                }
+
+                nuevosArchivos.forEach((archivo) => {
+                    const tipoArchivo = archivo.type;
+                    if (['application/pdf', 'image/jpg', 'image/jpeg', 'image/png'].includes(tipoArchivo)) {
+                        archivosSeleccionadosEditar.push(archivo);
+                    } else {
+                        alert('Solo se permiten archivos PDF - JPG - JPEG - PNG.');
+                    }
+                });
+
+                e.target.value = ''; 
+                actualizarListaArchivosEditar();
+            });
+
             tbodyArchivos.addEventListener('click', function (e) {
                 if (e.target.closest('.eliminar-archivo')) {
                     const index = e.target.closest('.eliminar-archivo').getAttribute('data-index');
                     archivosSeleccionados.splice(index, 1);
                     actualizarListaArchivos();
+                }
+            });
+
+            tbodyArchivosEditar.addEventListener('click', function (e) {
+                if (e.target.closest('.eliminar-archivo-editar')) {
+                    const index = e.target.closest('.eliminar-archivo-editar').getAttribute('data-index');
+                    archivosSeleccionadosEditar.splice(index, 1);
+                    actualizarListaArchivosEditar();
                 }
             });
 
@@ -1195,7 +1452,114 @@
                     }
                 });
             });
-        });        
+
+            formularioEvidenciasEditar.addEventListener('submit', function(event) {
+                event.preventDefault(); // Evita el envío tradicional del formulario
+                
+                let formData = new FormData(this); // Capturar los datos del formulario
+
+                // Asegurarnos de que se están agregando los archivos seleccionados
+                if (archivosSeleccionadosEditar.length === 0) {
+                    alert("No se ha seleccionado ningún archivo.");
+                    return;
+                }
+
+                archivosSeleccionadosEditar.forEach((archivo, index) => {
+                    formData.append('evidencias[]', archivo);
+                });
+
+                // Verifica que `formData` contenga los archivos antes de enviar
+                for (let pair of formData.entries()) {
+                    console.log(pair[0] + ': ' + (pair[1] instanceof File ? pair[1].name : pair[1]));  // Log de los archivos
+                }
+                
+                var urlE = $("#formularioEvidenciasEditar").attr("action");
+
+                $.ajax({
+                    url: urlE,
+                    type: "POST",
+                    data: formData,  // Asegurarse de enviar `formData`
+                    processData: false,
+                    contentType: false,
+                    success: function(response) {
+                        if (response.success) {
+                            // Guardar mensaje en localStorage
+                            localStorage.setItem("toastr_message", response.message);
+                            console.log('Respuesta:', response);
+                            // Redirigir a la URL proporcionada
+                            window.location.href = response.redirect;
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error(xhr.responseText);
+                        toastr.error("Hubo un error al actualizar las evidencias.");
+                    }
+                });
+            });
+
+            $('#id_anio_eip_editar, #id_trimestre_eip_editar').on('change', function () {
+                const id_ip = document.getElementById('id_ip_e_editar').value;
+                const anio = document.getElementById('id_anio_eip_editar').value;
+                const trimestre = document.getElementById('id_trimestre_eip_editar').value;
+                const datos = `${id_ip}_${anio}_${trimestre}`;
+                console.log(datos);
+                if (anio != '0' && trimestre != '0') {
+                    // Generar la URL correctamente
+                    const url = `{{ route('editarevidenciasip', ['id' => '__ID__']) }}`.replace('__ID__', datos);
+
+                    $.ajax({
+                        url: url,
+                        type: 'GET',
+                        success: function(data) {
+                            tbodyArchivosEditar.innerHTML = '';
+                            console.log(data);
+                            if (!data || data.length === 0) {
+                                tablaArchivosEditar.style.display = 'none';
+                                return;
+                            }
+
+                            data.forEach((archivo, index) => {
+                                const nombre = archivo.evidencia.split('_').slice(5).join('_');
+                                const ultimopunto = nombre.lastIndexOf('.');
+                                const extension = ultimopunto !== -1 ? nombre.substring(ultimopunto + 1) : '';
+                                let icono = extension === 'pdf' ? '<i class="fas fa-file-pdf text-danger h4"></i>' : '<i class="fas fa-file-image text-primary h4"></i>';
+                                const tr = document.createElement('tr');
+                                tr.innerHTML = `
+                                    <td class="text-center">${index + 1}</td>
+                                    <td><a href="../../storage/` + archivo.evidencia + `" target="_blank">${nombre}</a></td>
+                                    <td class="text-center">${icono}</td>
+                                    <td class="text-center"><button class="btn btn-danger btn-sm eliminar-archivo" data-index="${index}"><i class="fas fa-trash-alt"></i></button></td>
+                                `;
+                                tbodyArchivosEditar.appendChild(tr);
+                            });
+
+                            tablaArchivosEditar.style.display = 'table';
+                        },
+                        error: function(xhr, status, error) {
+                            console.error('Error AJAX:', status, error);
+                        }
+                    });
+                }
+            });
+
+            $('#guardarevidenciasipmodal').on('hidden.bs.modal', function () {
+                $(this).find('input[type="text"], input[type="number"]').val('0'); // Limpiar textos y números
+                $(this).find('input[type="file"]').val(null); // Limpiar input de archivos
+                $(this).find('select').prop('selectedIndex', 0); // Resetear selects al primer valor
+                $('#tbody-archivos').empty(); // Vaciar la lista de evidencias
+                $('#tabla-archivos').hide(); // Ocultar la lista de evidencias
+                labelEvidencias.style.display = 'inline-block'; // Mostrar el label si estaba oculto
+            });
+
+            $('#editarevidenciasipmodal').on('hidden.bs.modal', function () {
+                $(this).find('input[type="text"], input[type="number"]').val('0'); // Limpiar textos y números
+                $(this).find('input[type="file"]').val(null); // Limpiar input de archivos
+                $(this).find('select').prop('selectedIndex', 0); // Resetear selects al primer valor
+                $('#tbody-archivos-editar').empty(); // Vaciar la lista de evidencias
+                $('#tabla-archivos-editar').hide(); // Ocultar la lista de evidencias
+                labelEvidenciasEditar.style.display = 'inline-block'; // Mostrar el label si estaba oculto
+            });
+        });
 
         document.getElementById('avance1').addEventListener('input', function (e) {
             // Reemplaza cualquier carácter que no sea un número.
@@ -1272,7 +1636,7 @@
                     { className: "text-center", orderable: false, targets: "_all" } // Desactivar ordenación en la columna de acciones
                 ]
             });*/
-            $('#tabla-archivos').DataTable({
+            $('#tabla-archivos, #tabla-archivos-editar').DataTable({
                 paging: false, // Activar paginación
                 searching: false, // Activar barra de búsqueda
                 ordering: false, // Activar ordenación de columnas
@@ -1668,6 +2032,7 @@
                     $('#actividad_editar').val(data[0].codigo_a);
                     $('#anio_act_editar').val(data[0].anio);
                     $('#trim_act_editar').val(data[0].trimestre);
+                    $('#desc_act_editar').val(data[0].descripcion_aa);
                     $('#estado').val(data[0].estado);
                 },
                 error: function(xhr, status, error) {
@@ -2138,6 +2503,7 @@
                 url: url,
                 type: 'get',
                 success: function(data) {
+                    console.log(data);
                     $('#tab-2024_consulta').tab('show');
                     $('#cod_ip').text(data.codigo_ip + '. ' + data.nombre_ip); 
                     if (data.indproducto2[0].total_2024_3 != "No programado") {
@@ -2149,7 +2515,12 @@
                         $('#programado_2024_3').text("No programado");
                     }
                     if (data.indproducto2[0].porcentaje_2024_3 != "No programado") {
-                        $('#porcentaje_avance_2024_3').text(data.indproducto2[0].porcentaje_2024_3 + ' %');
+                        if (data.indproducto2[0].porcentaje_2024_3 > 100) {
+                            $('#porcentaje_avance_2024_3').text('100.00 %');    
+                        }
+                        else {
+                            $('#porcentaje_avance_2024_3').text(data.indproducto2[0].porcentaje_2024_3 + ' %');
+                        }
                         $('#p_avance_2024_3').text(data.indproducto2[0].porcentaje_2024_3);
                         $('#por_avance_2024_3').text(data.indproducto2[0].porcentaje_2024_3);
                         $('#progress_2024_3 .progress-bar').css('width', data.indproducto2[0].porcentaje_2024_3 + '%');  // Cambiar el ancho
@@ -2168,7 +2539,12 @@
                         $('#programado_2024_4').text("No programado");
                     }
                     if (data.indproducto2[0].porcentaje_2024_4 != "No programado") {
-                        $('#porcentaje_avance_2024_4').text(data.indproducto2[0].porcentaje_2024_4 + ' %');
+                        if (data.indproducto2[0].porcentaje_2024_4 > 100) {
+                            $('#porcentaje_avance_2024_4').text('100.00 %');    
+                        }
+                        else {
+                            $('#porcentaje_avance_2024_4').text(data.indproducto2[0].porcentaje_2024_4 + ' %');
+                        }
                         $('#p_avance_2024_4').text(data.indproducto2[0].porcentaje_2024_4);
                         $('#por_avance_2024_4').text(data.indproducto2[0].porcentaje_2024_4);
                         $('#progress_2024_4 .progress-bar').css('width', data.indproducto2[0].porcentaje_2024_4 + '%');  // Cambiar el ancho
@@ -2187,7 +2563,12 @@
                         $('#programado_2024').text(data.indproducto2[0].p2024);
                     }
                     if (data.indproducto2[0].porcentaje_2024 != "No programado") {
-                        $('#porcentaje_2024').text(data.indproducto2[0].porcentaje_2024 + ' %');
+                        if (data.indproducto2[0].porcentaje_2024 > 100) {
+                            $('#porcentaje_2024').text('100.00 %');    
+                        }
+                        else {
+                            $('#porcentaje_avance_2024').text(data.indproducto2[0].porcentaje_2024 + ' %');
+                        }
                         $('#p_avance_2024').text(data.indproducto2[0].porcentaje_2024);
                         $('#por_avance_2024').text(data.indproducto2[0].porcentaje_2024);
                         $('#progress_2024 .progress-bar').css('width', data.indproducto2[0].porcentaje_2024 + '%');  // Cambiar el ancho
@@ -2206,7 +2587,12 @@
                         $('#programado_2025_1').text("No programado");
                     }
                     if (data.indproducto2[0].porcentaje_2025_1 != "No programado") {
-                        $('#porcentaje_avance_2025_1').text(data.indproducto2[0].porcentaje_2025_1 + ' %');
+                        if (data.indproducto2[0].porcentaje_2025_1 > 100) {
+                            $('#porcentaje_avance_2025_1').text('100.00 %');    
+                        }
+                        else {
+                            $('#porcentaje_avance_2025_1').text(data.indproducto2[0].porcentaje_2025_1 + ' %');
+                        }
                         $('#p_avance_2025_1').text(data.indproducto2[0].porcentaje_2025_1);
                         $('#por_avance_2025_1').text(data.indproducto2[0].porcentaje_2025_1);
                         $('#progress_2025_1 .progress-bar').css('width', data.indproducto2[0].porcentaje_2025_1 + '%');  // Cambiar el ancho
@@ -2225,7 +2611,12 @@
                         $('#programado_2025_2').text("No programado");
                     }
                     if (data.indproducto2[0].porcentaje_2025_2 != "No programado") {
-                        $('#porcentaje_avance_2025_2').text(data.indproducto2[0].porcentaje_2025_2 + ' %');
+                        if (data.indproducto2[0].porcentaje_2025_2 > 100) {
+                            $('#porcentaje_avance_2025_2').text('100.00 %');    
+                        }
+                        else {
+                            $('#porcentaje_avance_2025_2').text(data.indproducto2[0].porcentaje_2025_2 + ' %');
+                        }
                         $('#p_avance_2025_2').text(data.indproducto2[0].porcentaje_2025_2);
                         $('#por_avance_2025_2').text(data.indproducto2[0].porcentaje_2025_2);
                         $('#progress_2025_2 .progress-bar').css('width', data.indproducto2[0].porcentaje_2025_2 + '%');  // Cambiar el ancho
@@ -2244,7 +2635,12 @@
                         $('#programado_2025_3').text("No programado");
                     }
                     if (data.indproducto2[0].porcentaje_2025_3 != "No programado") {
-                        $('#porcentaje_avance_2025_3').text(data.indproducto2[0].porcentaje_2025_3 + ' %');
+                        if (data.indproducto2[0].porcentaje_2025_3 > 100) {
+                            $('#porcentaje_avance_2025_3').text('100.00 %');    
+                        }
+                        else {
+                            $('#porcentaje_avance_2025_3').text(data.indproducto2[0].porcentaje_2025_3 + ' %');
+                        }
                         $('#p_avance_2025_3').text(data.indproducto2[0].porcentaje_2025_3);
                         $('#por_avance_2025_3').text(data.indproducto2[0].porcentaje_2025_3);
                         $('#progress_2025_3 .progress-bar').css('width', data.indproducto2[0].porcentaje_2025_3 + '%');  // Cambiar el ancho
@@ -2263,7 +2659,12 @@
                         $('#programado_2025_4').text("No programado");
                     }
                     if (data.indproducto2[0].porcentaje_2025_4 != "No programado") {
-                        $('#porcentaje_avance_2025_4').text(data.indproducto2[0].porcentaje_2025_4 + ' %');
+                        if (data.indproducto2[0].porcentaje_2025_4 > 100) {
+                            $('#porcentaje_avance_2025_4').text('100.00 %');    
+                        }
+                        else {
+                            $('#porcentaje_avance_2025_4').text(data.indproducto2[0].porcentaje_2025_4 + ' %');
+                        }
                         $('#p_avance_2025_4').text(data.indproducto2[0].porcentaje_2025_4);
                         $('#por_avance_2025_4').text(data.indproducto2[0].porcentaje_2025_4);
                         $('#progress_2025_4 .progress-bar').css('width', data.indproducto2[0].porcentaje_2025_4 + '%');  // Cambiar el ancho
@@ -2282,7 +2683,12 @@
                         $('#programado_2025').text(data.indproducto2[0].p2025);
                     }
                     if (data.indproducto2[0].porcentaje_2025 != "No programado") {
-                        $('#porcentaje_2025').text(data.indproducto2[0].porcentaje_2025 + ' %');
+                        if (data.indproducto2[0].porcentaje_2025 > 100) {
+                            $('#porcentaje_2025').text('100.00 %');    
+                        }
+                        else {
+                            $('#porcentaje_2025').text(data.indproducto2[0].porcentaje_2025 + ' %');
+                        }
                         $('#p_avance_2025').text(data.indproducto2[0].porcentaje_2025);
                         $('#por_avance_2025').text(data.indproducto2[0].porcentaje_2025);
                         $('#progress_2025 .progress-bar').css('width', data.indproducto2[0].porcentaje_2025 + '%');  // Cambiar el ancho
@@ -2301,7 +2707,12 @@
                         $('#programado_2026_1').text("No programado");
                     }
                     if (data.indproducto2[0].porcentaje_2026_1 != "No programado") {
-                        $('#porcentaje_avance_2026_1').text(data.indproducto2[0].porcentaje_2026_1 + ' %');
+                        if (data.indproducto2[0].porcentaje_2026_1 > 100) {
+                            $('#porcentaje_avance_2026_1').text('100.00 %');    
+                        }
+                        else {
+                            $('#porcentaje_avance_2026_1').text(data.indproducto2[0].porcentaje_2026_1 + ' %');
+                        }
                         $('#p_avance_2026_1').text(data.indproducto2[0].porcentaje_2026_1);
                         $('#por_avance_2026_1').text(data.indproducto2[0].porcentaje_2026_1);
                         $('#progress_2026_1 .progress-bar').css('width', data.indproducto2[0].porcentaje_2026_1 + '%');  // Cambiar el ancho
@@ -2320,7 +2731,12 @@
                         $('#programado_2026_2').text("No programado");
                     }
                     if (data.indproducto2[0].porcentaje_2026_2 != "No programado") {
-                        $('#porcentaje_avance_2026_2').text(data.indproducto2[0].porcentaje_2026_2 + ' %');
+                        if (data.indproducto2[0].porcentaje_2026_2 > 100) {
+                            $('#porcentaje_avance_2026_2').text('100.00 %');    
+                        }
+                        else {
+                            $('#porcentaje_avance_2026_2').text(data.indproducto2[0].porcentaje_2026_2 + ' %');
+                        }
                         $('#p_avance_2026_2').text(data.indproducto2[0].porcentaje_2026_2);
                         $('#por_avance_2026_2').text(data.indproducto2[0].porcentaje_2026_2);
                         $('#progress_2026_2 .progress-bar').css('width', data.indproducto2[0].porcentaje_2026_2 + '%');  // Cambiar el ancho
@@ -2339,7 +2755,12 @@
                         $('#programado_2026_3').text("No programado");
                     }
                     if (data.indproducto2[0].porcentaje_2026_3 != "No programado") {
-                        $('#porcentaje_avance_2026_3').text(data.indproducto2[0].porcentaje_2026_3 + ' %');
+                        if (data.indproducto2[0].porcentaje_2026_3 > 100) {
+                            $('#porcentaje_avance_2026_3').text('100.00 %');    
+                        }
+                        else {
+                            $('#porcentaje_avance_2026_3').text(data.indproducto2[0].porcentaje_2026_3 + ' %');
+                        }
                         $('#p_avance_2026_3').text(data.indproducto2[0].porcentaje_2026_3);
                         $('#por_avance_2026_3').text(data.indproducto2[0].porcentaje_2026_3);
                         $('#progress_2026_3 .progress-bar').css('width', data.indproducto2[0].porcentaje_2026_3 + '%');  // Cambiar el ancho
@@ -2358,7 +2779,12 @@
                         $('#programado_2026_4').text("No programado");
                     }
                     if (data.indproducto2[0].porcentaje_2026_4 != "No programado") {
-                        $('#porcentaje_avance_2026_4').text(data.indproducto2[0].porcentaje_2026_4 + ' %');
+                        if (data.indproducto2[0].porcentaje_2026_4 > 100) {
+                            $('#porcentaje_avance_2026_4').text('100.00 %');    
+                        }
+                        else {
+                            $('#porcentaje_avance_2026_4').text(data.indproducto2[0].porcentaje_2026_4 + ' %');
+                        }
                         $('#p_avance_2026_4').text(data.indproducto2[0].porcentaje_2026_4);
                         $('#por_avance_2026_4').text(data.indproducto2[0].porcentaje_2026_4);
                         $('#progress_2026_4 .progress-bar').css('width', data.indproducto2[0].porcentaje_2026_4 + '%');  // Cambiar el ancho
@@ -2377,7 +2803,12 @@
                         $('#programado_2026').text(data.indproducto2[0].p2026);
                     }
                     if (data.indproducto2[0].porcentaje_2026 != "No programado") {
-                        $('#porcentaje_2026').text(data.indproducto2[0].porcentaje_2026 + ' %');
+                        if (data.indproducto2[0].porcentaje_2026 > 100) {
+                            $('#porcentaje_2026').text('100.00 %');    
+                        }
+                        else {
+                            $('#porcentaje_2026').text(data.indproducto2[0].porcentaje_2026 + ' %');
+                        }
                         $('#p_avance_2026').text(data.indproducto2[0].porcentaje_2026);
                         $('#por_avance_2026').text(data.indproducto2[0].porcentaje_2026);
                         $('#progress_2026 .progress-bar').css('width', data.indproducto2[0].porcentaje_2026 + '%');  // Cambiar el ancho
@@ -2396,7 +2827,12 @@
                         $('#programado_2027_1').text("No programado");
                     }
                     if (data.indproducto2[0].porcentaje_2027_1 != "No programado") {
-                        $('#porcentaje_avance_2027_1').text(data.indproducto2[0].porcentaje_2027_1 + ' %');
+                        if (data.indproducto2[0].porcentaje_2027_1 > 100) {
+                            $('#porcentaje_avance_2027_1').text('100.00 %');    
+                        }
+                        else {
+                            $('#porcentaje_avance_2027_1').text(data.indproducto2[0].porcentaje_2027_1 + ' %');
+                        }
                         $('#p_avance_2027_1').text(data.indproducto2[0].porcentaje_2027_1);
                         $('#por_avance_2027_1').text(data.indproducto2[0].porcentaje_2027_1);
                         $('#progress_2027_1 .progress-bar').css('width', data.indproducto2[0].porcentaje_2027_1 + '%');  // Cambiar el ancho
@@ -2415,7 +2851,12 @@
                         $('#programado_2027_2').text("No programado");
                     }
                     if (data.indproducto2[0].porcentaje_2027_2 != "No programado") {
-                        $('#porcentaje_avance_2027_2').text(data.indproducto2[0].porcentaje_2027_2 + ' %');
+                        if (data.indproducto2[0].porcentaje_2027_2 > 100) {
+                            $('#porcentaje_avance_2027_2').text('100.00 %');    
+                        }
+                        else {
+                            $('#porcentaje_avance_2027_2').text(data.indproducto2[0].porcentaje_2027_2 + ' %');
+                        }
                         $('#p_avance_2027_2').text(data.indproducto2[0].porcentaje_2027_2);
                         $('#por_avance_2027_2').text(data.indproducto2[0].porcentaje_2027_2);
                         $('#progress_2027_2 .progress-bar').css('width', data.indproducto2[0].porcentaje_2027_2 + '%');  // Cambiar el ancho
@@ -2434,7 +2875,12 @@
                         $('#programado_2027_3').text("No programado");
                     }
                     if (data.indproducto2[0].porcentaje_2027_3 != "No programado") {
-                        $('#porcentaje_avance_2027_3').text(data.indproducto2[0].porcentaje_2027_3 + ' %');
+                        if (data.indproducto2[0].porcentaje_2027_3 > 100) {
+                            $('#porcentaje_avance_2027_3').text('100.00 %');    
+                        }
+                        else {
+                            $('#porcentaje_avance_2027_3').text(data.indproducto2[0].porcentaje_2027_3 + ' %');
+                        }
                         $('#p_avance_2027_3').text(data.indproducto2[0].porcentaje_2027_3);
                         $('#por_avance_2027_3').text(data.indproducto2[0].porcentaje_2027_3);
                         $('#progress_2027_3 .progress-bar').css('width', data.indproducto2[0].porcentaje_2027_3 + '%');  // Cambiar el ancho
@@ -2453,7 +2899,12 @@
                         $('#programado_2027_4').text("No programado");
                     }
                     if (data.indproducto2[0].porcentaje_2027_4 != "No programado") {
-                        $('#porcentaje_avance_2027_4').text(data.indproducto2[0].porcentaje_2027_4 + ' %');
+                        if (data.indproducto2[0].porcentaje_2027_4 > 100) {
+                            $('#porcentaje_avance_2027_4').text('100.00 %');    
+                        }
+                        else {
+                            $('#porcentaje_avance_2027_4').text(data.indproducto2[0].porcentaje_2027_4 + ' %');
+                        }
                         $('#p_avance_2027_4').text(data.indproducto2[0].porcentaje_2027_4);
                         $('#por_avance_2027_4').text(data.indproducto2[0].porcentaje_2027_4);
                         $('#progress_2027_4 .progress-bar').css('width', data.indproducto2[0].porcentaje_2027_4 + '%');  // Cambiar el ancho
@@ -2472,7 +2923,12 @@
                         $('#programado_2027').text(data.indproducto2[0].p2027);
                     }
                     if (data.indproducto2[0].porcentaje_2027 != "No programado") {
-                        $('#porcentaje_2027').text(data.indproducto2[0].porcentaje_2027 + ' %');
+                        if (data.indproducto2[0].porcentaje_2027 > 100) {
+                            $('#porcentaje_2027').text('100.00 %');    
+                        }
+                        else {
+                            $('#porcentaje_2027').text(data.indproducto2[0].porcentaje_2027 + ' %');
+                        }
                         $('#p_avance_2027').text(data.indproducto2[0].porcentaje_2027);
                         $('#por_avance_2027').text(data.indproducto2[0].porcentaje_2027);
                         $('#progress_2027 .progress-bar').css('width', data.indproducto2[0].porcentaje_2027 + '%');  // Cambiar el ancho
@@ -2515,6 +2971,18 @@
                     $('#evidencias_ip_2026').html(archivos["2026"]);
                     $('#evidencias_ip_2027').html(archivos["2027"]);
                     // Destruyes DataTable si ya estaba inicializado
+                    if ($.fn.DataTable.isDataTable('#tabla_logros_2024')) {
+                        $('#tabla_logros_2024').DataTable().destroy();
+                    }
+                    if ($.fn.DataTable.isDataTable('#tabla_logros_2025')) {
+                        $('#tabla_logros_2025').DataTable().destroy();
+                    }
+                    if ($.fn.DataTable.isDataTable('#tabla_logros_2026')) {
+                        $('#tabla_logros_2026').DataTable().destroy();
+                    }
+                    if ($.fn.DataTable.isDataTable('#tabla_logros_2027')) {
+                        $('#tabla_logros_2027').DataTable().destroy();
+                    }
                     if ($.fn.DataTable.isDataTable('#ver_evi_ip_2024')) {
                         $('#ver_evi_ip_2024').DataTable().destroy();
                     }
@@ -2530,8 +2998,8 @@
 
                     // Vuelves a inicializar DataTable
                     $('#ver_evi_ip_2024, #ver_evi_ip_2025, #ver_evi_ip_2026, #ver_evi_ip_2027').DataTable({
-                        paging: true,
-                        searching: true,
+                        paging: false,
+                        searching: false,
                         ordering: true,
                         pagingType: 'full_numbers',
                         language: {
@@ -2547,6 +3015,61 @@
                             { className: "text-center", orderable: false, targets: "_all" }
                         ]
                     });
+
+                    $('#tabla_logros_2024, #tabla_logros_2025, #tabla_logros_2026, #tabla_logros_2027').DataTable({
+                        paging: false,
+                        searching: false,
+                        ordering: true,
+                        pagingType: 'full_numbers',
+                        language: {
+                            paginate: {
+                                first: '<<',
+                                previous: '<',
+                                next: '>',
+                                last: '>>'
+                            },
+                            url: "/plugins/datatables/idioma.json",
+                        },
+                        columnDefs: [
+                            { orderable: false }
+                        ]
+                    });
+
+                    // Limpiar los tbody antes de agregar nuevos logros (opcional, si quieres resetear)
+                    ['2024', '2025', '2026', '2027'].forEach(anio => {
+                        const tbody = document.getElementById(`tbody-logros_${anio}_ip`);
+                        if (tbody) tbody.innerHTML = '';
+                    });
+
+                    // Iterar por cada año en logros
+                    for (const anio in data.logros) {
+                        if (data.logros.hasOwnProperty(anio)) {
+                            const tbody = document.getElementById(`tbody-logros_${anio}_ip`);
+                            if (!tbody) continue;
+
+                            data.logros[anio].forEach(logro => {
+                                // Crear fila
+                                const tr = document.createElement('tr');
+
+                                // Crear columnas y asignar valores según lo que quieres mostrar
+                                // Por ejemplo: logro, trimestre_lip
+                                const tdLogro = document.createElement('td');
+                                tdLogro.textContent = logro.logro;
+
+                                const tdPeriodo = document.createElement('td');
+                                tdPeriodo.textContent = logro.anio_lip + '_' + logro.trimestre_lip;
+                                tdPeriodo.className = 'text-center';
+
+                                // Agregar las columnas a la fila
+                                tr.appendChild(tdPeriodo);
+                                tr.appendChild(tdLogro);
+                                
+                                // Agregar fila al tbody correspondiente
+                                tbody.appendChild(tr);
+                            });
+                        }
+                    }
+                    
                     $('#verestado_ip').text(data.estado_ip).removeClass().addClass('badge').addClass(data.estado_ip === 'Activo' ? 'bg-success' : 'bg-danger');
                     var fechacreado = new Date(data.created_at);
                     var opciones = {
@@ -2782,6 +3305,41 @@
             }
         });
 
+        $('#logro_ip_editar').on('input', function () {
+            var el = this;
+            var val = el.value;
+
+            // Guarda posición del cursor
+            var start = el.selectionStart;
+            var end = el.selectionEnd;
+
+            // Reemplaza múltiples espacios por uno solo
+            var newVal = val.replace(/\s+/g, ' ');
+
+            if (newVal !== val) {
+                // Si cambió, actualiza el valor
+                el.value = newVal;
+
+                // Ajusta la posición del cursor para que no se mueva hacia atrás al eliminar espacios extra
+                var diff = val.length - newVal.length;
+                var newPos = start - diff;
+                if (newPos < 0) newPos = 0;
+
+                el.setSelectionRange(newPos, newPos);
+            }
+
+            // Actualiza contador
+            $('#max_logro_ip_editar').text(el.value.length).removeClass('badge bg-success bg-danger');
+
+            if (el.value.length >= 500) {
+                $('#envia_logro_editar').prop('disabled', false);
+                $('#max_logro_ip_editar').addClass('badge bg-success');
+            } else {
+                $('#envia_logro_editar').prop('disabled', true);
+                $('#max_logro_ip_editar').addClass('badge bg-danger');
+            }
+        });
+
         $('#desc_act').on('input', function () {
             var el = this;
             var val = el.value;
@@ -2817,16 +3375,82 @@
             }
         });
 
+        $('#desc_act_editar').on('input', function () {
+            var el = this;
+            var val = el.value;
+
+            // Guarda posición del cursor
+            var start = el.selectionStart;
+            var end = el.selectionEnd;
+
+            // Reemplaza múltiples espacios por uno solo
+            var newVal = val.replace(/\s+/g, ' ');
+
+            if (newVal !== val) {
+                // Si cambió, actualiza el valor
+                el.value = newVal;
+
+                // Ajusta la posición del cursor para que no se mueva hacia atrás al eliminar espacios extra
+                var diff = val.length - newVal.length;
+                var newPos = start - diff;
+                if (newPos < 0) newPos = 0;
+
+                el.setSelectionRange(newPos, newPos);
+            }
+
+            // Actualiza contador
+            $('#max_logro_act_editar').text(el.value.length).removeClass('badge bg-success bg-danger');
+
+            if (el.value.length >= 500) {
+                $('#envia_act_editar').prop('disabled', false);
+                $('#max_logro_act_editar').addClass('badge bg-success');
+            } else {
+                $('#envia_act_editar').prop('disabled', true);
+                $('#max_logro_act_editar').addClass('badge bg-danger');
+            }
+        });
+
         $('#agregaravancemodal').on('hidden.bs.modal', function () {
             $(this).find('input[type="text"], input[type="number"]').val('0'); // Limpiar textos y números
             $(this).find('.badge').text('').removeClass('bg-success bg-danger bg-warning'); // Limpiar spans con badge
         });
 
-        $('#guardarevidenciasipmodal').on('hidden.bs.modal', function () {
+        $('#editaravancemodal').on('hidden.bs.modal', function () {
             $(this).find('input[type="text"], input[type="number"]').val('0'); // Limpiar textos y números
-            $(this).find('input[type="file"]').val(null); // Limpiar input de archivos
-            $(this).find('select').prop('selectedIndex', 0); // Resetear selects al primer valor
-            $('#verlistaevidencias').empty(); // Vaciar la lista de evidencias
+            $(this).find('.badge').text('').removeClass('bg-success bg-danger bg-warning'); // Limpiar spans con badge
+        });
+
+        $('#editaravancemodal').on('shown.bs.modal', function () {
+            $('#desc_act_editar').trigger('input');
+        });
+
+        $('#id_anio_lip_editar, #id_trimestre_lip_editar').on('change', function () {
+            const id_ip = document.getElementById('id_ip_e').value;
+            const anio = document.getElementById('id_anio_lip_editar').value;
+            
+            const trimestre = document.getElementById('id_trimestre_lip_editar').value;
+            
+            const datos = `${id_ip}_${anio}_${trimestre}`;
+            // Generar la URL correctamente
+            const url = `{{ route('editarlogroip', ['id' => '__ID__']) }}`.replace('__ID__', datos);
+
+            $.ajax({
+                url: url,
+                type: 'GET',
+                success: function(data) {
+                    if (Array.isArray(data)) {
+                        if (data != null) {
+                            data.forEach(function(datos) {
+                                $('#logro_ip_editar').val(datos.logro);
+                                $('#logro_ip_editar').trigger('input');
+                            });
+                        }
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error AJAX:', status, error);
+                }
+            });
         });
 
         setTimeout(function() {
