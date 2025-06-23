@@ -29,7 +29,7 @@ class csvImportAvaAct implements ToModel, WithHeadingRow
                                 ->where('avance_aa', $row['avance_aa'])
                                 ->where('anio_aa', $row['anio_aa'])
                                 ->where('trimestre_aa', $row['trimestre_aa'])
-                                ->where('descripcion_aa', $row['descripcion_aa'])
+                                ->where('logro_aa', $row['logro_aa'])
                                 ->where('estado_aa', $row['estado_aa'])                
                                 ->exists();
         }
@@ -43,7 +43,7 @@ class csvImportAvaAct implements ToModel, WithHeadingRow
                 'avance_aa' => $row['avance_aa'],
                 'anio_aa' => $row['anio_aa'],
                 'trimestre_aa' => $row['trimestre_aa'],
-                'descripcion_aa' => $row['descripcion_aa'],
+                'logro_aa' => $row['logro_aa'],
                 'estado_aa' => $row['estado_aa'],
                 'created_at' => now(),  // Fecha y hora actual
                 'updated_at' => now(),  // Fecha y hora actual

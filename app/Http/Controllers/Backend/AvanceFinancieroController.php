@@ -76,7 +76,7 @@ class AvanceFinancieroController extends Controller
 
         // Relacionar las tablas
         $query->leftJoin('programar_financieros AS pf', 'pf.id_ip', '=', 'ip.id')
-            ->leftJoin('avance_financieros AS af', 'af.id_ip', '=', 'ip.id')
+            ->leftJoin('avance_financieros AS af', 'af.id_pf', '=', 'pf.id')
             ->groupBy('ip.id')
             ->orderBy('ip.id', 'asc');
 
@@ -339,6 +339,7 @@ class AvanceFinancieroController extends Controller
                 $rol = $usuario->rol->nombre_r;
                 $dependencia = $usuario->dependencia->nombre_d;
             $ip = IndicadorProducto::with('indproducto')->find($id);
+            return response()->json($ip);
             $periodo = [
                 '_2024_3', '_2024_4', '_2025_1', '_2025_2', '_2025_3', '_2025_4',
                 '_2026_1', '_2026_2', '_2026_3', '_2026_4', '_2027_1', '_2027_2',

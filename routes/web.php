@@ -487,6 +487,7 @@ Route::prefix('avaact')
             Route::post('/eliminaravaact/{id}', [AvanceActividadController::class, 'eliminaravaact'])->name('eliminaravaact');
             Route::post('/eliminarevidact/{id}', [AvanceActividadController::class, 'eliminarevidact'])->name('eliminarevidact');
             Route::post('/importar', [AvanceActividadController::class, 'csvavaacts'])->name('csvavaacts');
+            Route::post('/importar_logro', [AvanceActividadController::class, 'csvlogros'])->name('csvlogros');
             Route::post('/guardarevidenciaip', [AvanceActividadController::class, 'guardarevidenciasip'])->name('guardarevidenciasip');
             Route::get('/editarevidenciaip/{id}', [AvanceActividadController::class, 'editarevidenciasip'])->name('editarevidenciasip');
             Route::post('/actualizarevidenciaip', [AvanceActividadController::class, 'actualizarevidenciasip'])->name('actualizarevidenciasip');

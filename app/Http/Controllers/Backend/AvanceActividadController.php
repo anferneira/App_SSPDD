@@ -14,6 +14,7 @@ use App\Models\ProgramarEstrategico;
 use App\Models\Dependencia;
 use App\Models\Evidencias;
 use App\Imports\csvImportAvaAct;
+use App\Imports\csvImportLogroIP;
 use App\Models\DependenciaApuesta;
 use App\Models\DependenciaDimension;
 use App\Models\DependenciaEstrategia;
@@ -956,7 +957,7 @@ class AvanceActividadController extends Controller
                                 $join->on('actividads.id_ip', '=', 'sumas_anio.id_ip')
                                     ->on('actividads.anio_a', '=', 'sumas_anio.anio_a');
                             })
-                            ->select('actividads.codigo_a as codigo_a', 'actividads.nombre_a as nombre_a', 'indicador_productos.codigo_ip as codigo_ip', 'indicador_productos.nombre_ip as nombre_ip', 'dependencias.nombre_d as nombre_d', 'avance_actividads.anio_aa as anio', 'avance_actividads.trimestre_aa as trimestre', 'actividads.aporte_a as aporte', 'avance_actividads.avance_aa as avance', 'avance_actividads.estado_aa as estado', 'avance_actividads.created_at as created_at', 'avance_actividads.updated_at as updated_at', 'avance_actividads.descripcion_aa as descripcion',
+                            ->select('actividads.codigo_a as codigo_a', 'actividads.nombre_a as nombre_a', 'indicador_productos.codigo_ip as codigo_ip', 'indicador_productos.nombre_ip as nombre_ip', 'dependencias.nombre_d as nombre_d', 'avance_actividads.anio_aa as anio', 'avance_actividads.trimestre_aa as trimestre', 'actividads.aporte_a as aporte', 'avance_actividads.avance_aa as avance', 'avance_actividads.estado_aa as estado', 'avance_actividads.created_at as created_at', 'avance_actividads.updated_at as updated_at', 'avance_actividads.logro_aa as logro',
                                 DB::raw('COALESCE(SUM(CAST(REPLACE(avance_actividads.avance_aa, ",", ".") AS DECIMAL(10,2))), 0) as avance_total'),
                                 DB::raw('
                                     COALESCE(
@@ -1003,7 +1004,7 @@ class AvanceActividadController extends Controller
                                 'avance_actividads.trimestre_aa',
                                 'actividads.aporte_a',
                                 'avance_actividads.avance_aa',
-                                'avance_actividads.descripcion_aa',
+                                'avance_actividads.logro_aa',
                                 'sumas_periodo.total_aporte_periodo',
                                 'sumas_anio.total_aporte_anio',
                                 'avance_actividads.estado_aa',
@@ -1219,14 +1220,14 @@ class AvanceActividadController extends Controller
         $avaact = Actividad::join('avance_actividads', 'actividads.id', '=', 'avance_actividads.id_a')
                             ->join('indicador_productos', 'indicador_productos.id', '=', 'actividads.id_ip')
                             ->join('dependencias', 'dependencias.id', '=', 'indicador_productos.id_d')
-                            ->select('avance_actividads.id as id', 'avance_actividads.descripcion_aa as descripcion_aa', 'indicador_productos.id as id_ip', 'indicador_productos.codigo_ip as codigo_ip', 'dependencias.id as id_d', 'dependencias.nombre_d as nombre_d', 'avance_actividads.avance_aa as avance_aa', 'actividads.aporte_a as aporte_a', 'actividads.id as id_a', 'actividads.codigo_a as codigo_a', 'actividads.anio_a as anio', 'actividads.trimestre_a as trimestre', 'avance_actividads.estado_aa as estado')
+                            ->select('avance_actividads.id as id', 'avance_actividads.logro_aa as logro_aa', 'indicador_productos.id as id_ip', 'indicador_productos.codigo_ip as codigo_ip', 'dependencias.id as id_d', 'dependencias.nombre_d as nombre_d', 'avance_actividads.avance_aa as avance_aa', 'actividads.aporte_a as aporte_a', 'actividads.id as id_a', 'actividads.codigo_a as codigo_a', 'actividads.anio_a as anio', 'actividads.trimestre_a as trimestre', 'avance_actividads.estado_aa as estado')
                             ->where('actividads.id', $id)
                             ->groupBy(
                                 'avance_actividads.id',
                                 'indicador_productos.id',
                                 'dependencias.id',
                                 'avance_actividads.avance_aa',
-                                'avance_actividads.descripcion_aa',
+                                'avance_actividads.logro_aa',
                                 'actividads.aporte_a',
                                 'actividads.id',
                                 'actividads.anio_a',
@@ -1264,7 +1265,7 @@ class AvanceActividadController extends Controller
         $avaact->anio_aa = $request->input('anio');
         $avaact->trimestre_aa = $request->input('trimestre');
         $avaact->id_a = $request->input('id_a');
-        $avaact->descripcion_aa = $request->input('desc_act');
+        $avaact->logro_aa = $request->input('desc_act');
         $avaact->estado_aa = $request->input('estado');
         $avaact->save();
         
@@ -1329,7 +1330,7 @@ class AvanceActividadController extends Controller
         // Los encabezados leídos están en $headings[0][0]
         $encabezadosLeidos = $headings[0][0];
         // Encabezados esperados
-        $encabezadosEsperados = ['id_a', 'avance_aa', 'anio_aa', 'trimestre_aa', 'descripcion_aa', 'estado_aa'];
+        $encabezadosEsperados = ['id_a', 'avance_aa', 'anio_aa', 'trimestre_aa', 'logro_aa', 'estado_aa'];
 
         $encabezadosLeidos = array_map('trim', $headings[0][0]);
         sort($encabezadosLeidos);
@@ -1346,6 +1347,45 @@ class AvanceActividadController extends Controller
         // Continuar con la importación si todo está bien
         // Crear la instancia de la clase de importación
         $importar = new csvImportAvaAct;
+
+        Excel::import($importar, $request->file('archivo'));
+
+         // Preparar los mensajes según el resultado
+        if ($importar->cantidadNuevos === 0) {
+            return redirect()->back()->with('info', 'Todos los Avances de Actividades ya existen en la base de datos.');
+        }
+
+        return redirect()->back()->with('success', "{$importar->cantidadNuevos} nuevos Avances de Actividades importados correctamente y {$importar->cantidadExistentes} registros ya existían en la base de datos.");
+    }
+
+    public function csvlogros(Request $request) {
+        $request->validate([
+            'archivo' => 'required|file|mimes:csv,txt',
+        ]);
+
+        // Leer los encabezados del archivo
+        $headings = (new HeadingRowImport)->toArray($request->file('archivo'));
+        
+        // Los encabezados leídos están en $headings[0][0]
+        $encabezadosLeidos = $headings[0][0];
+        // Encabezados esperados
+        $encabezadosEsperados = ['logro', 'anio_lip', 'trimestre_lip', 'id_ip', 'estado_lip'];
+
+        $encabezadosLeidos = array_map('trim', $headings[0][0]);
+        sort($encabezadosLeidos);
+        sort($encabezadosEsperados);
+
+        //dd($encabezadosEsperados, $encabezadosLeidos);
+
+        // Verificar si los encabezados coinciden
+        // Comparamos si los encabezados obtenidos coinciden con los esperados
+        if ($encabezadosLeidos !== $encabezadosEsperados) {
+            return redirect()->back()->with('error', 'La estructura del archivo no es válida. Verifica los encabezados.');
+        }
+
+        // Continuar con la importación si todo está bien
+        // Crear la instancia de la clase de importación
+        $importar = new csvImportLogroIP;
 
         Excel::import($importar, $request->file('archivo'));
 

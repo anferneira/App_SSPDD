@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('avance_financieros', function (Blueprint $table) {
             $table->integerIncrements('id');
+            $table->string('bpin_af');
             $table->string('ICLD', 50);
             $table->string('ICDE', 50);
             $table->string('SGPE', 50);
@@ -26,6 +27,7 @@ return new class extends Migration
             $table->string('OR', 50);
             $table->string('anio_af');
             $table->string('trimestre_af');
+            $table->string('logro_af');
             $table->integer('id_pf')->unsigned();
             $table->timestamps();
             $table->string('estado_af');

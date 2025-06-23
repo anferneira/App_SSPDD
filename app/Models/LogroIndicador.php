@@ -12,7 +12,7 @@ class LogroIndicador extends Model
 
     protected $fillable = [
         'logro',
-        'anip_lip',
+        'anio_lip',
         'trimestre_lip',
         'id_ip',
         'estado_lip',

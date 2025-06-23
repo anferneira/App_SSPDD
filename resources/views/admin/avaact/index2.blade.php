@@ -1441,7 +1441,7 @@
                         if (response.success) {
                             // Guardar mensaje en localStorage
                             localStorage.setItem("toastr_message", response.message);
-                            console.log('Respuesta:', response);
+                            //console.log('Respuesta:', response);
                             // Redirigir a la URL proporcionada
                             window.location.href = response.redirect;
                         }
@@ -1485,7 +1485,7 @@
                         if (response.success) {
                             // Guardar mensaje en localStorage
                             localStorage.setItem("toastr_message", response.message);
-                            console.log('Respuesta:', response);
+                            //console.log('Respuesta:', response);
                             // Redirigir a la URL proporcionada
                             window.location.href = response.redirect;
                         }
@@ -1502,7 +1502,6 @@
                 const anio = document.getElementById('id_anio_eip_editar').value;
                 const trimestre = document.getElementById('id_trimestre_eip_editar').value;
                 const datos = `${id_ip}_${anio}_${trimestre}`;
-                console.log(datos);
                 if (anio != '0' && trimestre != '0') {
                     // Generar la URL correctamente
                     const url = `{{ route('editarevidenciasip', ['id' => '__ID__']) }}`.replace('__ID__', datos);
@@ -1512,7 +1511,6 @@
                         type: 'GET',
                         success: function(data) {
                             tbodyArchivosEditar.innerHTML = '';
-                            console.log(data);
                             if (!data || data.length === 0) {
                                 tablaArchivosEditar.style.display = 'none';
                                 return;
@@ -2032,7 +2030,7 @@
                     $('#actividad_editar').val(data[0].codigo_a);
                     $('#anio_act_editar').val(data[0].anio);
                     $('#trim_act_editar').val(data[0].trimestre);
-                    $('#desc_act_editar').val(data[0].descripcion_aa);
+                    $('#desc_act_editar').val(data[0].logro_aa);
                     $('#estado').val(data[0].estado);
                 },
                 error: function(xhr, status, error) {
@@ -2375,7 +2373,6 @@
                 url: url,
                 type: 'get',
                 success: function(data) {
-                    console.log(data);
                     // Desestructurar los tres valores del JSON
                     var datos = data[0];  // Lista de actividades
                     var faltan = data[1]; // Cantidad de actividades sin avance
@@ -2503,7 +2500,6 @@
                 url: url,
                 type: 'get',
                 success: function(data) {
-                    console.log(data);
                     $('#tab-2024_consulta').tab('show');
                     $('#cod_ip').text(data.codigo_ip + '. ' + data.nombre_ip); 
                     if (data.indproducto2[0].total_2024_3 != "No programado") {
@@ -3130,7 +3126,6 @@
                 url: url,
                 type: 'get',
                 success: function(data) {
-                    console.log(data);
                     $('#verindicador').text(data[0].codigo_ip + '. ' + data[0].nombre_ip);
                     $('#verdependencia').text(data[0].nombre_d);
                     $('#veractividad').text(data[0].codigo_a + '. ' + data[0].nombre_a);
@@ -3197,7 +3192,7 @@
                     $('#verporcavance').text(data[0].porcentaje_avance + '%');
                     $('#verporcperiodo').text(data[0].porcentaje_periodo + '%');
                     $('#verporcanio').text(data[0].porcentaje_anio + '%');
-                    $('#verjust_act').text(data[0].descripcion);
+                    $('#verjust_act').text(data[0].logro);
                     if (data.length > 0) {
                         $('#verestado').text(data[0].estado).removeClass().addClass('badge').addClass(data[0].estado === 'Activo' ? 'bg-success' : 'bg-danger');
                         var fechacreado = new Date(data[0].created_at);
@@ -3341,6 +3336,7 @@
         });
 
         $('#desc_act').on('input', function () {
+            alert(0)
             var el = this;
             var val = el.value;
 

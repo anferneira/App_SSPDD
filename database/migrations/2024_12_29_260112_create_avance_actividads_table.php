@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('trimestre_aa');
             $table->integer('id_a')->unsigned();
             $table->timestamps();
-            $table->text('descripcion_aa')->nullable();
+            $table->text('logro_aa');
             $table->string('estado_aa');
             $table->foreign('id_a')->references('id')->on('actividads')->onDelete('cascade');
         });

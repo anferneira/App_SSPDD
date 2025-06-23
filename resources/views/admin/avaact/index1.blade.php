@@ -12,6 +12,9 @@
                         <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#importaravancemodal" title="cargar avances de actividades">
                             <i class="fas fa-cloud-upload"></i>
                         </button>
+                        <button type="button" class="btn btn-success" data-toggle="modal" data-target="#importarlogromodal" title="cargar logros de indicadores">
+                            <i class="fas fa-cloud-upload"></i>
+                        </button>
                     </h1>
                 </div>
                 <div class="col-sm-4">
@@ -438,6 +441,43 @@
                 </div>
             </div>
         </div>
+
+        <div class="modal fade" id="importarlogromodal">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary">
+                        <h5 class="modal-title" id="exampleModalLabel">Cargar logros de indicadores (Archivo CSV)</h5>
+                        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="false">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <form action="{{ route('csvlogros') }}" method="POST" enctype="multipart/form-data">
+                            @csrf
+                            <div class="input-group">
+                                <!-- Botón personalizado -->
+                                <button class="btn btn-primary" id="customFileBtn1" type="button">Seleccionar Archivo CSV</button>
+                                
+                                <!-- Muestra el nombre del archivo seleccionado -->
+                                <span id="fileName1" class="ml-2">No se ha seleccionado ningún archivo</span>
+                        
+                                <!-- Input de archivo oculto -->
+                                <input 
+                                    type="file"
+                                    id="archivo_csv1" 
+                                    name="archivo" 
+                                    accept=".csv" 
+                                    style="display: none;" 
+                                    required>
+                            </div>
+                            <div class="mt-3">
+                                <button class="btn btn-success" type="submit">Importar Datos</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
     </section>
 @endsection
 
@@ -452,6 +492,16 @@
         document.getElementById('archivo_csv').addEventListener('change', function () {
             const fileName = this.files[0] ? this.files[0].name : 'No se ha seleccionado ningún archivo';
             document.getElementById('fileName').textContent = fileName;
+        });
+        // Muestra el selector de archivos al hacer clic en el botón
+        document.getElementById('customFileBtn1').addEventListener('click', function () {
+            document.getElementById('archivo_csv1').click(); // Simula el clic en el input de archivo oculto
+        });
+
+        // Muestra el nombre del archivo seleccionado
+        document.getElementById('archivo_csv1').addEventListener('change', function () {
+            const fileName = this.files[0] ? this.files[0].name : 'No se ha seleccionado ningún archivo';
+            document.getElementById('fileName1').textContent = fileName;
         });
         $(document).ready(function() {
             // Inicializar DataTable
@@ -501,35 +551,37 @@
                 url: urlRez,
                 type: 'get',
                 success: function(data) {
-                    // Limpiar todos los selects primero
-                    const limpiarDimensiones = () => {
-                        $('#id_dim').empty().append('<option value="0">Todos</option>');
-                    };
-                    const limpiarApuestas = () => {
-                        $('#id_a').empty().append('<option value="0">Todos</option>');
-                    };
+                    if (id_dep === '0') {
+                        // Limpiar todos los selects primero
+                        const limpiarDimensiones = () => {
+                            $('#id_dim').empty().append('<option value="0">Todos</option>');
+                        };
+                        const limpiarApuestas = () => {
+                            $('#id_a').empty().append('<option value="0">Todos</option>');
+                        };
 
-                    // Helpers para cargar opciones
-                    const cargarDimensiones = (dimensiones) => {
-                        dimensiones.forEach(dim => {
-                            $('#id_dim').append('<option value="' + dim.dimension_id + '">' + dim.dimension_codigo + '. ' + dim.dimension_nombre + '</option>');
-                            if (id_dim == dim.dimension_id) {
-                                $('#id_dim').val(dim.dimension_id).trigger('change');
-                            }
-                        });
-                    };
-                    const cargarApuestas = (dimensiones) => {
-                        dimensiones.forEach(dim => {
-                            dim.apuestas.forEach(ap => {
-                                $('#id_a').append('<option value="' + ap.apuesta_id + '">' + ap.apuesta_codigo + '. ' + ap.apuesta_nombre + '</option>');
-                                if (id_apu == ap.apuesta_id) {
-                                    $('#id_a').val(ap.apuesta_id).trigger('change');
+                        // Helpers para cargar opciones
+                        const cargarDimensiones = (dimensiones) => {
+                            dimensiones.forEach(dim => {
+                                $('#id_dim').append('<option value="' + dim.dimension_id + '">' + dim.dimension_codigo + '. ' + dim.dimension_nombre + '</option>');
+                                if (id_dim == dim.dimension_id) {
+                                    $('#id_dim').val(dim.dimension_id).trigger('change');
                                 }
                             });
-                        });
-                    };
+                        };
+                        const cargarApuestas = (dimensiones) => {
+                            dimensiones.forEach(dim => {
+                                dim.apuestas.forEach(ap => {
+                                    $('#id_a').append('<option value="' + ap.apuesta_id + '">' + ap.apuesta_codigo + '. ' + ap.apuesta_nombre + '</option>');
+                                    if (id_apu == ap.apuesta_id) {
+                                        $('#id_a').val(ap.apuesta_id).trigger('change');
+                                    }
+                                });
+                            });
+                        };
+                    }
                     // CASO 1: Estrategia seleccionada
-                    if (sel === 'id_e') {
+                    if (sel === 'id_e' && id_dep === '0') {
                         limpiarDimensiones();
                         limpiarApuestas();
                         cargarDimensiones(data.dimensiones);
@@ -537,7 +589,7 @@
                     }
                     else {
                         // CASO 2: Dimensión seleccionada
-                        if (sel === 'id_dim') {
+                        if (sel === 'id_dim' && id_dep === '0') {
                             evitarEventoEstrategia = true;
                             $('#id_e').val(data.estrategia_id).trigger('change');
                             limpiarApuestas();
@@ -545,7 +597,7 @@
                         }
                         else {
                             // CASO 3: Apuesta seleccionada
-                            if (sel === 'id_a') {
+                            if (sel === 'id_a' && id_dep === '0') {
                                 evitarEventoEstrategia = true;
                                 $('#id_e').val(data.estrategia_id).trigger('change');
                                 evitarEventoDimension = true;
@@ -693,12 +745,13 @@
                 url: urlDep,
                 type: 'get',
                 success: function(data) {
-                    evitarEventoEstrategia = true;
-                    evitarEventoDimension = true;
-                    evitarEventoApuesta = true;
+                    console.log(data);
                     $('#id_e').empty().append('<option value="0" selected>Todos</option>');
                     $('#id_dim').empty().append('<option value="0" selected>Todos</option>');
                     $('#id_a').empty().append('<option value="0" selected>Todos</option>');
+                    evitarEventoEstrategia = true;
+                    evitarEventoDimension = true;
+                    evitarEventoApuesta = true;
                     data[0].forEach(est => {
                         $('#id_e').append(`<option value="${est.estrategias.id}">${est.estrategias.codigo_e}. ${est.estrategias.nombre_e}</option>`);
                     });
