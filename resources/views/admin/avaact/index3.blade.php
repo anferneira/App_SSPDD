@@ -20,7 +20,7 @@
                 <div class="col-sm-4">
                     <ol class="breadcrumb float-sm-right">
                         <li class="breadcrumb-item"><a href="{{ route('home') }}">Inicio</a></li>
-                        <li class="breadcrumb-item active">Avances Actividades Estratégico</li>
+                        <li class="breadcrumb-item active">Avances Actividades Plan Abrigo</li>
                     </ol>
                 </div>
             </div>

@@ -4,6 +4,7 @@ namespace App\Imports;
 
 use App\Models\IndicadorProducto;
 use App\Models\AvanceFinanciero;
+use App\Models\ProgramarFinanciero;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
@@ -20,12 +21,14 @@ class csvImportAvaFin implements ToModel, WithHeadingRow
 
     public function model(array $row)
     {
-        $relacion = IndicadorProducto::where('id', $row['id_ip']);
+        $rel = ProgramarFinanciero::find($row['id_pf']);
+        $relacion = IndicadorProducto::where('id', $rel->id_ip);
         if ($relacion) {
             // Verificar si el registro ya existe
-            $existe = AvanceFinanciero::where('id_ip', $row['id_ip'])
+            $existe = AvanceFinanciero::where('id_pf', $row['id_pf'])
                                 ->where('anio_af', $row['anio_af'])
                                 ->where('trimestre_af', $row['trimestre_af'])
+                                ->where('bpin_af', $row['bpin_af'])
                                 ->where('ICLD', $row['icld'])
                                 ->where('ICDE', $row['icde'])
                                 ->where('SGPE', $row['sgpe'])
@@ -37,6 +40,7 @@ class csvImportAvaFin implements ToModel, WithHeadingRow
                                 ->where('G', $row['g'])
                                 ->where('CO', $row['co'])
                                 ->where('OR', $row['or'])
+                                ->where('logro_af', $row['logro_af'])
                                 ->where('estado_af', $row['estado_af'])
                                 ->exists();
         }
@@ -46,9 +50,10 @@ class csvImportAvaFin implements ToModel, WithHeadingRow
         if (!$existe) {
             // Crear el registro si no existe
             AvanceFinanciero::create([
-                'id_ip' => $row['id_ip'],
+                'id_pf' => $row['id_pf'],
                 'anio_af' => $row['anio_af'],
                 'trimestre_af' => $row['trimestre_af'],
+                'bpin_af' => $row['bpin_af'],
                 'ICLD'=>$row['icld'],
                 'ICDE'=>$row['icde'],
                 'SGPE'=>$row['sgpe'],
@@ -60,6 +65,7 @@ class csvImportAvaFin implements ToModel, WithHeadingRow
                 'G'=>$row['g'],
                 'CO'=>$row['co'],
                 'OR'=>$row['or'],
+                'logro_af'=>$row['logro_af'],
                 'estado_af'=>$row['estado_af'],
                 'created_at' => now(),  // Fecha y hora actual
                 'updated_at' => now(),  // Fecha y hora actual

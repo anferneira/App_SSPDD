@@ -15,14 +15,14 @@ class AvanceFinanciero extends Model
         'ICLD', 'ICDE', 'SGPE', 'SGPS', 'SGPAPSB',
         'RPED', 'SGR', 'CR', 'G', 'CO', 'OR',
         'estado_af', 'anio_af', 'trimestre_af',
-        'id_ip',
+        'id_pf', 'bpin_af', 'logro_af'
     ];
 
     public function indproducto1(): BelongsTo {
         return $this->belongsTo(IndicadorProducto::class, 'id_ip', 'id');
     }
 
-    public function avancefin(): HasMany {
-        return $this->hasMany(ProgramarFinanciero::class, 'id');
+    public function avancefin(): BelongsTo {
+        return $this->belongsTo(ProgramarFinanciero::class, 'id_pf', 'id');
     }
 }

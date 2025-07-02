@@ -531,12 +531,13 @@ Route::prefix('avafin')
             Route::get('/avances_ind/{id}', [AvanceFinancieroController::class, 'ver_avanfin'])->name('ver_avanfin');
             Route::get('/indicador/avances/anio/{id}', [AvanceFinancieroController::class, 'veravances_anio'])->name('veravances_anio');
             Route::get('/veravafin/{id}', [AvanceFinancieroController::class, 'veravafin'])->name('veravafin');
+            Route::get('/verfinip/{id}', [AvanceFinancieroController::class, 'verfinip'])->name('verfinip');
             Route::get('/editaravafin/{id}', [AvanceFinancieroController::class, 'editaravafin'])->name('editaravafin');
             Route::post('/actualizaravafin', [AvanceFinancieroController::class, 'actualizaravafin'])->name('actualizaravafin');
             Route::post('/eliminaravafin/{id}', [AvanceFinancieroController::class, 'eliminaravafin'])->name('eliminaravafin');
             Route::post('/importar', [AvanceFinancieroController::class, 'csvavafins'])->name('csvavafins');
             Route::get('/indicador/avance_financiero/{id}', [AvanceFinancieroController::class, 'verfinanciero_anio'])->name('verfinanciero_anio');
-            Route::get('/verfinind/{id}', [AvanceFinancieroController::class, 'ver_ind2'])->name('ver_ind2');
+            Route::get('/verfinind/{id}', [AvanceFinancieroController::class, 'verfinind'])->name('verfinind');
             Route::get('/trae_financiero_anio/{id}', [AvanceFinancieroController::class, 'traer_financiero_anio'])->name('traer_financiero_anio');
         });
 

@@ -71,6 +71,7 @@ class AvanceActividadController extends Controller
             ->leftJoin('indicador_productos', 'indicador_productos.id', '=', 'actividads.id_ip')
             ->leftJoin('avance_actividads', 'avance_actividads.id_a', '=', 'actividads.id')
             ->leftJoin('programar_estrategicos', 'programar_estrategicos.id_ip', '=', 'indicador_productos.id')
+            ->where('indicador_productos.abrigo_ip', 'No')
             ->groupBy(
                 'indicador_productos.id',
                 'programar_estrategicos.calculo'
@@ -365,7 +366,6 @@ class AvanceActividadController extends Controller
         }
         $id = $request->id_ip;
         return redirect()->route('ver_ind1', ['id' => $id])->with('success', 'Avance de la Actividad creado correctamente para la actividad '.$a.' en el periodo '.$request->anio.'_'.$request->trimestre);
-        //return redirect()->route('listaravaacts')->with('success', 'Avance de la Actividad creado correctamente para la actividad '.$a.' en el periodo '.$request->anio.'_'.$request->trimestre);
     }
 
     public function ind_est_dim_apu($id)
@@ -1447,21 +1447,22 @@ class AvanceActividadController extends Controller
             ->leftJoin('apuestas', 'apuestas.id', '=', 'indicador_productos.id_a')
             ->leftJoin('dimensions', 'dimensions.id', '=', 'apuestas.id_d')
             ->leftJoin('estrategias', 'estrategias.id', '=', 'dimensions.id_e')
-            ->leftJoin('dependencias', 'dependencias.id', '=', 'indicador_productos.id_d');
+            ->leftJoin('dependencias', 'dependencias.id', '=', 'indicador_productos.id_d')
+            ->where('indicador_productos.abrigo_ip', 'No');
 
-            // ✅ Aplicar filtro por dependencia, solo si $id_d es diferente de 0
+            // ✅ Siempre filtrar por dependencia si se selecciona una
             if ($id_d != '0') {
-                $query->where('dependencias.id', $id_d);
+                $query->where('dependencias.id', (int)$id_d);
             }
-            // ✅ Aplicar filtro por estrategia, solo si $id_est es diferente de 0
+            // Filtros adicionales solo si se selecciona dependencia
             if ($id_est != '0') {
                 $query->where('estrategias.id', (int)$id_est);
             }
-            // ✅ Aplicar filtro por dimensión, solo si $id_dim es diferente de 0
+            // Si no se selecciona dependencia, no aplicar filtros de estrategia, dimensión o apuesta
             if ($id_dim != '0') {
                 $query->where('dimensions.id', (int)$id_dim);
             }
-            // ✅ Aplicar filtro por apuesta, solo si $id_apu es diferente de 0
+            // Si no se selecciona dimensión, no aplicar filtro de apuesta
             if ($id_apu != '0') {
                 $query->where('apuestas.id', (int)$id_apu);
             }
@@ -1720,7 +1721,76 @@ class AvanceActividadController extends Controller
                     }
                 })
                 ->values(); // Reindexa los resultados después del filter
-                return response()->json($ips);
+
+                $extraFiltros = null;
+
+                if ($id_d == '0') {
+                    // Caso 1: Todos en cero → traer todo
+                    if ($id_est == '0' && $id_dim == '0' && $id_apu == '0') {
+                        $extraFiltros = [
+                            'estrategias' => \App\Models\Estrategia::orderBy('codigo_e')->get(['id', 'codigo_e', 'nombre_e']),
+                            'dimensiones' => \App\Models\Dimension::orderBy('codigo_d')->get(['id', 'codigo_d', 'nombre_d', 'id_e']),
+                            'apuestas' => \App\Models\Apuesta::orderBy('codigo_a')->get(['id', 'codigo_a', 'nombre_a', 'id_d']),
+                        ];
+                    }
+
+                    // Caso 2: Estrategia seleccionada → traer dimensiones y apuestas asociadas
+                    elseif ($id_est != '0') {
+                        $estrategia = \App\Models\Estrategia::where('id', $id_est)
+                            ->orderBy('codigo_e')
+                            ->get(['id', 'codigo_e', 'nombre_e']);
+                        $dimensiones = \App\Models\Dimension::where('id_e', $id_est)
+                            ->orderBy('codigo_d')
+                            ->get(['id', 'codigo_d', 'nombre_d']);
+
+                        $apuestas = \App\Models\Apuesta::whereIn('id_d', $dimensiones->pluck('id'))
+                            ->orderBy('codigo_a')
+                            ->get(['id', 'codigo_a', 'nombre_a']);
+
+                        $extraFiltros = [
+                            'estrategias' => $estrategia,
+                            'dimensiones' => $dimensiones,
+                            'apuestas' => $apuestas,
+                        ];
+                    }
+
+                    // Caso 3: Dimensión seleccionada → traer estrategia asociada y apuestas de esa dimensión
+                    elseif ($id_dim != '0') {
+                        $dimension = \App\Models\Dimension::where('id', $id_dim)
+                            ->orderBy('codigo_d')
+                            ->get(['id', 'codigo_d', 'nombre_d', 'id_e']);
+                        $estrategia = \App\Models\Estrategia::where('id', $dimension?->id_e)
+                            ->get(['id', 'codigo_e', 'nombre_e']);
+
+                        $apuestas = \App\Models\Apuesta::where('id_d', $id_dim)
+                            ->orderBy('codigo_a')
+                            ->get(['id', 'codigo_a', 'nombre_a', 'id_d']);
+
+                        $extraFiltros = [
+                            'estrategias' => $estrategia,
+                            'dimensiones' => $dimension,
+                            'apuestas' => $apuestas,
+                        ];
+                    }
+
+                    // Caso 4: Apuesta seleccionada → traer dimensión y estrategia asociada
+                    elseif ($id_apu != '0') {
+                        $apuesta = \App\Models\Apuesta::find($id_apu);
+                        $dimension = \App\Models\Dimension::find($apuesta?->id_d);
+                        $estrategia = \App\Models\Estrategia::where('id', $dimension?->id_e)
+                            ->get(['id', 'codigo_e', 'nombre_e']);
+
+                        $extraFiltros = [
+                            'estrategias' => $estrategia,
+                            'dimensiones' => collect([$dimension])->filter(), // evita null
+                            'apuestas' => collect([$apuesta])->filter(), // evita null
+                        ];
+                    }
+                }
+                return response()->json([
+                    'indicadores' => $ips,
+                    'filtros' => $extraFiltros
+                ]);
     }
 
     public function rezago1($id) {

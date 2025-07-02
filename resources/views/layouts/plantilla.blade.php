@@ -458,6 +458,14 @@
                                     </p>
                                     </a>
                                 </li>
+                                <li class="nav-item">
+                                    <a href="{{ route('listaravafins') }}" class="nav-link active">
+                                    <i class="nav-icon fa fa-caret-right"></i>
+                                    <p>
+                                        Población
+                                    </p>
+                                    </a>
+                                </li>
                             </ul>
                         </li>
                         <li class="nav-item">
@@ -481,7 +489,7 @@
                                     <a href="" class="nav-link active">
                                     <i class="nav-icon fa fa-caret-right"></i>
                                     <p>
-                                        SPDD 2024 - 2027
+                                        Físico
                                     </p>
                                     </a>
                                 </li>

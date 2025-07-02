@@ -24,7 +24,7 @@
         <div class="container-fluid">
             <div class="row mb-2">
                 <div class="col-sm-8">
-                    <h1>Avance de Actividades Estratégico
+                    <h1>Avance de Actividades Plan Abrigo
                         <a href="{{ route('listaravaacts') }}" class="btn btn-primary">
                             Volver a Indicadores
                         </a>
